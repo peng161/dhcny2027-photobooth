@@ -2805,9 +2805,9 @@ async function openPack(ids) {
 }
 
 /* --- animated wall backgrounds --- */
-const WALL_BGS = { classic: "Red Sunburst", lantern: "Lantern Night", ink: "Ink & Gold Mountains", arena: "Holo Arena" };
-let wallBg = (new URLSearchParams(location.search).get("bg")) || ls.get("dh-wallbg") || "classic";
-if (!WALL_BGS[wallBg]) wallBg = "classic";
+const WALL_BGS = { ink: "Ink & Gold Mountains", lantern: "Lantern Night", arena: "Holo Arena", classic: "Red Sunburst" };
+let wallBg = (new URLSearchParams(location.search).get("bg")) || ls.get("dh-wallbg") || "ink";
+if (!WALL_BGS[wallBg]) wallBg = "ink";
 let bgRaf = 0, bgState = null;
 function setWallBg(k) {
   wallBg = k; ls.set("dh-wallbg", k);
