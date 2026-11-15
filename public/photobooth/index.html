@@ -779,7 +779,7 @@ const COLORS = {
   cover:    [{ n: "Red", sw: "#e3262f" }, { n: "Yellow", sw: "#ffd31a", cv: { mast: "#ffd31a", mastInk: "#1a1400" } }, { n: "White", sw: "#ffffff", cv: { mast: "#ffffff", mastInk: "#111111" } }, { n: "Teal", sw: "#19c3b1", cv: { mast: "#19c3b1", mastInk: "#04201d" } }],
   crimson:  [{ n: "Crimson", sw: "#7a0b16" }, { n: "Midnight", sw: "#0a1230", ink: "rgba(8,14,40,.9)" }, { n: "Jade", sw: "#0b4a37", ink: "rgba(4,48,36,.9)" }, { n: "Royal purple", sw: "#3a0f5a", ink: "rgba(40,10,62,.9)" }],
   stamp:    [{ n: "Red", sw: "#b8232b" }, { n: "Teal", sw: "#16797a", st: { bg: "#16797a", paper: "#f6f8f2", ink: "#0c4a4b" } }, { n: "Mustard", sw: "#d79a1e", st: { bg: "#c98d16", paper: "#fdf8ec", ink: "#6a4806" } }, { n: "Navy", sw: "#22356e", st: { bg: "#22356e", paper: "#f7f6f1", ink: "#18265a" } }],
-  wanted:   [{ n: "Parchment", sw: "#e3c88f" }, { n: "Sepia", sw: "#a8835a", wp: { paper: "#e2c9a0", paper2: "#a8835a", ink: "#2e1b0c", accent: "#6e1a10" } }, { n: "Blue ink", sw: "#1d2a4f", wp: { paper: "#efe6cf", paper2: "#cdbb92", ink: "#1d2a4f", accent: "#a81c22" } }, { n: "Red ink", sw: "#8a1c14", wp: { paper: "#f1e1bd", paper2: "#cfa970", ink: "#7a1410", accent: "#2e1b0c" } }],
+  wanted:   [{ n: "Teal chart", sw: "#3c6070" }, { n: "Sepia", sw: "#5a4632", wp: { paper: "#e2c9a0", paper2: "#a8835a", ink: "#2e1b0c", accent: "#6e1a10", sea: ["#6a5238", "#3a2a1a", "#1a120b"] } }, { n: "Navy chart", sw: "#1d2a4f", wp: { paper: "#efe6cf", paper2: "#cdbb92", ink: "#1d2a4f", accent: "#a81c22", sea: ["#2a3f72", "#14214a", "#070d24"] } }, { n: "Crimson chart", sw: "#8a1c14", wp: { paper: "#f1e1bd", paper2: "#cfa970", ink: "#3a1208", accent: "#a81c22", sea: ["#7a2020", "#420c0c", "#1e0505"] } }],
   lantern:  [{ n: "Lantern glow", sw: "#ff6a3d" }, { n: "Moonlight", sw: "#8fb8ff", leak: "#8fb8ff", frame: SILVER, trim: SILVER }, { n: "Plum", sw: "#d46bff", leak: "#d46bff" }, { n: "Jade", sw: "#38d39f", leak: "#38d39f" }],
   polaroid: [{ n: "Kraft", sw: "#c9a77a" }, { n: "Chalkboard", sw: "#2f4a3a", pl: { bg1: "#36523f", bg2: "#1d3226", dark: true } }, { n: "Blush", sw: "#f0c3c9", pl: { bg1: "#f3cdd2", bg2: "#e2a8b2" } }, { n: "Denim", sw: "#3d5a80", pl: { bg1: "#46648c", bg2: "#2a405f", dark: true } }],
   crystal:  [{ n: "Ice", sw: "#b9d3f0" }, { n: "Amethyst", sw: "#8e6cc9", frame: AMETHYST, trim: AMETHYST, tint: "#3e2470" }, { n: "Aqua", sw: "#2fb4e0", frame: CYAN, trim: CYAN, tint: "#0f5a70" }, { n: "Rose quartz", sw: "#e8a898", frame: ROSE, trim: ROSE, tint: "#6e2a44" }],
@@ -819,7 +819,7 @@ function themeFor(key, D, th) {
     case "poster": return { poster: { bg: [th.main, th.dark, th.deep], deep: th.deep, ink: th.dark } };
     case "classic": return { frame: th.metal, trim: key === "redpacket" ? GOLD : D.trim };
     case "duel": return { du: { frame: th.main, frame2: th.deep, box: th.paper } };
-    case "wanted": return { wp: { paper: th.paper, paper2: th.light, ink: th.deep, accent: th.dark } };
+    case "wanted": return { wp: { paper: "#efdcb2", paper2: "#c9a46a", ink: "#3a2412", accent: th.dark, sea: [th.main, th.dark, th.deep] } };
     case "rookie": return { rk: { c1: th.accent, c2: th.deep, metal: th.metal === GOLD ? GOLD : SILVER } };
     case "blueprint": return { bp: { bg: th.dark, bg2: th.deep, line: th.paper } };
     case "cover": return { cv: { mast: th.accent, mastInk: lum(th.accent) > 0.6 ? "#111111" : "#ffffff" } };
@@ -2741,114 +2741,197 @@ function effectText() {
   (card.attack2 ? card.attacks : card.attacks.slice(0, 1)).forEach(m => { if (m && m.name) parts.push(`${m.name}${m.dmg ? ` (${m.dmg})` : ""}: ${m.text || ""}`); });
   return parts;
 }
-function drawDuel(ctx, D) {
-  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, U = D.du, light = lumHex(U.frame) < 0.62;
-  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = "#15120f"; ctx.fill();
-  rr(ctx, 16, 16, W - 32, H - 32, 20);
-  const fg = ctx.createLinearGradient(0, 0, W, H); fg.addColorStop(0, lighten(U.frame, 0.12)); fg.addColorStop(0.5, U.frame); fg.addColorStop(1, U.frame2);
-  ctx.fillStyle = fg; ctx.fill();
-  ctx.save(); rr(ctx, 16, 16, W - 32, H - 32, 20); ctx.clip(); ctx.globalAlpha = 0.07; ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
-  for (let i = -H; i < W; i += 7) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke(); }
+function foilEdge(ctx, inset, alpha) {
+  ctx.save();
+  ctx.beginPath(); rrPath(ctx, 0, 0, W, H, 34); rrPath(ctx, inset, inset, W - inset * 2, H - inset * 2, 22); ctx.clip("evenodd");
+  ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = alpha;
+  const hg = ctx.createLinearGradient(0, 0, W, H);
+  ["#ff6ec4", "#7873f5", "#4adede", "#a6ff7a", "#ffe66d", "#ff8a5c", "#ff6ec4", "#4adede"].forEach((c, i, a) => hg.addColorStop(i / (a.length - 1), c));
+  ctx.fillStyle = hg; ctx.fillRect(0, 0, W, H);
   ctx.restore();
-  // name plate + DH medallion
-  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
-  rr(ctx, 42, 38, W - 150, 72, 8); ctx.fillStyle = metal(ctx, 0, 38, 0, 110, ["#fbf6ea", "#e6dcc6", "#f7f0de", "#d4c6a6"]); ctx.fill(); ctx.restore();
-  rr(ctx, 42, 38, W - 150, 72, 8); ctx.strokeStyle = "#3a2c1c"; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function rrPath(ctx, x, y, w, h, r) { ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+const FOIL_TXT = ["#ffffff", "#ffe9a8", "#c8f0ff", "#ffd0f0", "#fff6c8", "#ffffff"];
+function drawDuel(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, U = D.du;
+  const glow = lighten(U.frame, 0.45);
+  // chrome outer border with a rainbow foil edge
+  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = metal(ctx, 0, 0, W, H, ["#e4e7eb", "#6f757d", "#f6f7f9", "#4a4f56", "#c3c8cf"]); ctx.fill();
+  brushed(ctx, false); foilEdge(ctx, 16, 0.6);
+  // glowing frame body with a hex pattern
+  ctx.save(); rr(ctx, 16, 16, W - 32, H - 32, 22); ctx.clip();
+  const bg = ctx.createRadialGradient(W / 2, 260, 40, W / 2, 520, 820);
+  bg.addColorStop(0, lighten(U.frame, 0.3)); bg.addColorStop(0.45, U.frame); bg.addColorStop(1, U.frame2);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = "rgba(255,255,255,.09)"; ctx.lineWidth = 1.2;
+  const hr = 22, hw = hr * Math.sqrt(3);
+  for (let row = 0, y = 0; y < H + hr; row++, y += hr * 1.5) for (let x = (row % 2) * hw / 2; x < W + hw; x += hw) hexPath(ctx, x, y, hr), ctx.stroke();
+  ctx.globalCompositeOperation = "screen";
+  [[0.18, 0.18], [0.5, 0.1], [0.8, 0.14]].forEach(([c, a]) => {
+    const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(c - 0.08, "rgba(255,255,255,0)"); g.addColorStop(c, `rgba(255,255,255,${a})`); g.addColorStop(c + 0.08, "rgba(255,255,255,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  });
+  ctx.restore();
+  rr(ctx, 16, 16, W - 32, H - 32, 22); ctx.strokeStyle = metal(ctx, 0, 0, W, H, GOLD); ctx.lineWidth = 2.5; ctx.stroke();
+  // dark glass name plate with foil lettering
+  rr(ctx, 40, 36, W - 148, 70, 12); ctx.fillStyle = "rgba(6,6,10,.55)"; ctx.fill();
+  ctx.strokeStyle = metal(ctx, 40, 36, W - 108, 106, GOLD); ctx.lineWidth = 2.5; ctx.stroke();
   const nm = card.name || "Your Name";
-  fitFont(ctx, nm, 800, 46, SF, W - 196, 20); ctx.fillStyle = "#1a1410"; ctx.fillText(nm, 62, 90);
-  drawBadge(ctx, W - 72, 74, 32);
-  // level stars from the stage
+  fitFont(ctx, nm, 800, 46, SF, W - 196, 20);
+  ctx.save(); ctx.lineJoin = "round"; ctx.lineWidth = 5; ctx.strokeStyle = "rgba(0,0,0,.6)"; ctx.strokeText(nm, 62, 87); ctx.restore();
+  ctx.fillStyle = metal(ctx, 62, 50, 62 + ctx.measureText(nm).width, 92, FOIL_TXT); ctx.fillText(nm, 62, 87);
+  // attribute orb: the DH medallion, glowing
+  ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 24; ctx.beginPath(); ctx.arc(W - 70, 71, 33, 0, Math.PI * 2); ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fill(); ctx.restore();
+  drawBadge(ctx, W - 70, 71, 32);
+  // stage + cluster chip on the left, glowing stars on the right
   const lvl = Math.min(8, 2 + Math.max(0, STAGES.indexOf(card.stage || "BASIC")) + (card.hp >= 150 ? 1 : 0));
   for (let i = 0; i < lvl; i++) {
-    const sx = W - 70 - i * 40, sy = 140;
-    ctx.save(); ctx.shadowColor = "rgba(0,0,0,.4)"; ctx.shadowBlur = 4;
-    ctx.beginPath(); ctx.arc(sx, sy, 16, 0, Math.PI * 2); ctx.fillStyle = "#b3121b"; ctx.fill(); ctx.restore();
-    ctx.beginPath(); ctx.arc(sx, sy, 16, 0, Math.PI * 2); ctx.strokeStyle = metal(ctx, sx - 16, sy - 16, sx + 16, sy + 16, GOLD); ctx.lineWidth = 2.5; ctx.stroke();
-    starShape(ctx, sx, sy + 1, 11); ctx.fillStyle = metal(ctx, sx - 11, sy - 11, sx + 11, sy + 11, ["#fff3c4", "#f5c84c", "#d9a93c"]); ctx.fill();
+    const sx = W - 66 - i * 38, sy = 134;
+    ctx.save(); ctx.shadowColor = "rgba(255,200,80,.9)"; ctx.shadowBlur = 12;
+    starShape(ctx, sx, sy, 15); ctx.fillStyle = metal(ctx, sx - 15, sy - 15, sx + 15, sy + 15, ["#fff7d6", "#f5c84c", "#fff1b0", "#c08a1c"]); ctx.fill(); ctx.restore();
+    starShape(ctx, sx, sy, 15); ctx.strokeStyle = "rgba(90,50,0,.8)"; ctx.lineWidth = 1.5; ctx.stroke();
   }
-  ctx.font = `700 15px ${CF}`; ctx.fillStyle = light ? "rgba(255,255,255,.9)" : "rgba(0,0,0,.75)"; ctx.fillText(`STAGE · ${(card.stage || "BASIC").toUpperCase()}`, 48, 146);
-  // bevelled photo window
-  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
-  ctx.fillStyle = metal(ctx, P.x - 12, P.y - 12, P.x + P.w + 12, P.y + P.h + 12, ["#8d8a84", "#3e3a35", "#a9a59d", "#2c2925"]); ctx.fillRect(P.x - 12, P.y - 12, P.w + 24, P.h + 24); ctx.restore();
-  ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip(); drawPhoto(ctx, P, t, P.y + P.h / 2 + 12); if (card.holo) holo(ctx, P, 0.4); ctx.restore();
-  ctx.strokeStyle = "rgba(0,0,0,.7)"; ctx.lineWidth = 2; ctx.strokeRect(P.x, P.y, P.w, P.h);
-  ctx.textAlign = "right"; ctx.font = `700 15px ${CF}`; ctx.fillStyle = light ? "rgba(255,255,255,.92)" : "rgba(0,0,0,.8)";
-  ctx.fillText(`DH27-${String(event.num).padStart(3, "0")}`, P.x + P.w, P.y + P.h + 30); ctx.textAlign = "left";
-  // effect box
-  const bx = 48, by = 736, bw = W - 96, bh = 234;
-  rr(ctx, bx, by, bw, bh, 6); ctx.fillStyle = U.box; ctx.fill(); ctx.strokeStyle = "#3a2c1c"; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.font = `800 14px ${CF}`; const chip = `${t.label}  ·  ${(card.stage || "BASIC").toUpperCase()}`, cw = ctx.measureText(chip).width + 46;
+  rr(ctx, 40, 120, cw, 28, 14); ctx.fillStyle = "rgba(6,6,10,.5)"; ctx.fill(); ctx.strokeStyle = "rgba(255,230,170,.6)"; ctx.lineWidth = 1.2; ctx.stroke();
+  energy(ctx, card.type, 56, 134, 10); ctx.fillStyle = "#fff"; ctx.fillText(chip, 72, 139);
+  // gold-bevelled photo window with energy brackets
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 16; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = metal(ctx, P.x - 14, P.y - 14, P.x + P.w + 14, P.y + P.h + 14, GOLD); ctx.fillRect(P.x - 14, P.y - 14, P.w + 28, P.h + 28); ctx.restore();
+  ctx.fillStyle = "#0b0a0d"; ctx.fillRect(P.x - 4, P.y - 4, P.w + 8, P.h + 8);
+  ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  drawPhoto(ctx, P, t, P.y + P.h / 2 + 12);
+  ctx.globalCompositeOperation = "screen";
+  let g = ctx.createRadialGradient(P.x + P.w / 2, P.y + P.h + 40, 0, P.x + P.w / 2, P.y + P.h + 40, P.w * 0.75);
+  g.addColorStop(0, rgbaHex(U.frame, 0.45)); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(P.x, P.y, P.w, P.h);
+  ctx.globalCompositeOperation = "source-over";
+  g = ctx.createRadialGradient(P.x + P.w / 2, P.y + P.h / 2, P.h * 0.35, P.x + P.w / 2, P.y + P.h / 2, P.h * 0.85);
+  g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.35)"); ctx.fillStyle = g; ctx.fillRect(P.x, P.y, P.w, P.h);
+  if (card.holo) holo(ctx, P, 0.45);
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle = "#fff"; ctx.shadowColor = glow; ctx.shadowBlur = 12; ctx.lineWidth = 3.5;
+  [[P.x + 12, P.y + 12, 1, 1], [P.x + P.w - 12, P.y + 12, -1, 1], [P.x + 12, P.y + P.h - 12, 1, -1], [P.x + P.w - 12, P.y + P.h - 12, -1, -1]].forEach(([x, y, dx, dy]) => {
+    ctx.beginPath(); ctx.moveTo(x + dx * 34, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * 34); ctx.stroke();
+  });
+  ctx.restore();
+  // edition strip
+  const ey = P.y + P.h + 34;
+  ctx.font = `800 14px ${CF}`; ctx.fillStyle = metal(ctx, 44, ey - 14, 300, ey, FOIL_TXT);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 4; ctx.fillText("◆ CNY 2027 LIMITED EDITION", 46, ey); ctx.restore();
+  ctx.textAlign = "right"; ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillText(`DH27-${String(event.num).padStart(3, "0")}`, W - 46, ey); ctx.textAlign = "left";
+  // dark glass effect box
+  const bx = 40, by = ey + 16, bw = W - 80, bh = 980 - by;
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 14; ctx.shadowOffsetY = 4;
+  rr(ctx, bx, by, bw, bh, 14); const bgb = ctx.createLinearGradient(0, by, 0, by + bh); bgb.addColorStop(0, shade(U.frame2, 0.55, 0.9)); bgb.addColorStop(1, shade(U.frame2, 0.8, 0.95));
+  ctx.fillStyle = bgb; ctx.fill(); ctx.restore();
+  rr(ctx, bx, by, bw, bh, 14); ctx.strokeStyle = metal(ctx, bx, by, bx + bw, by + bh, GOLD); ctx.lineWidth = 2.5; ctx.stroke();
   const spc = (card.species || "Hub Guest").replace(/\s*Type$/i, "");
   const tl = `[ ${t.label} / ${spc} / Effect ]`;
-  energy(ctx, card.type, bx + 28, by + 30, 13);
-  fitFont(ctx, tl, 800, 22, SF, bw - 70, 13); ctx.fillStyle = "#1a1410"; ctx.fillText(tl, bx + 50, by + 38);
-  const parts = effectText();
+  fitFont(ctx, tl, 800, 21, SF, bw - 40, 13); ctx.fillStyle = "#f5d27a"; ctx.fillText(tl, bx + 20, by + 34);
+  ctx.fillStyle = "rgba(245,210,122,.35)"; ctx.fillRect(bx + 20, by + 46, bw - 40, 1.5);
+  const parts = effectText(), room = bh - 122;
   let fs = 18, lines;
-  const room = bh - 112;
-  do { ctx.font = `500 ${fs}px ${CF}`; lines = []; parts.forEach(p => lines.push(...wrap(ctx, p, bw - 36))); fs -= 0.5; } while (lines.length * (fs + 5) > room && fs > 12);
-  ctx.fillStyle = "#231a12"; lines.slice(0, Math.floor(room / (fs + 5))).forEach((ln, i) => ctx.fillText(ln, bx + 18, by + 70 + i * (fs + 5)));
-  ctx.fillStyle = "#3a2c1c"; ctx.fillRect(bx + 14, by + bh - 44, bw - 28, 2);
-  const hp = +card.hp || 100, atk = Math.round(hp * 20 / 50) * 50, def = Math.round(hp * 15 / 50) * 50;
-  ctx.textAlign = "right"; ctx.font = `800 28px ${NF}`; ctx.fillStyle = "#1a1410";
-  ctx.fillText(`ATK ${atk}    DEF ${def}`, bx + bw - 18, by + bh - 12);
-  ctx.textAlign = "left"; ctx.font = `600 13px ${CF}`; ctx.fillStyle = "rgba(35,26,18,.7)"; ctx.fillText(`${card.hp || ""} HP  ·  weak to ${card.weakTxt || "Mondays"}`.slice(0, 60), bx + 18, by + bh - 16);
-  drawFooter(ctx, light, 44, W - 44, 1010);
+  do { ctx.font = `500 ${fs}px ${CF}`; lines = []; parts.forEach(p => lines.push(...wrap(ctx, p, bw - 40))); fs -= 0.5; } while (lines.length * (fs + 5) > room && fs > 12);
+  ctx.fillStyle = "rgba(255,255,255,.95)"; lines.slice(0, Math.floor(room / (fs + 5))).forEach((ln, i) => ctx.fillText(ln, bx + 20, by + 74 + i * (fs + 5)));
+  // ATK / DEF pills
+  const hp = +card.hp || 100, atk = Math.round((hp * 20) / 50) * 50, def = Math.round((hp * 15) / 50) * 50;
+  const pill = (x, label, val, col) => {
+    const pw = 190, ph = 44, py = by + bh - 58;
+    rr(ctx, x, py, pw, ph, 22); const pg = ctx.createLinearGradient(0, py, 0, py + ph); pg.addColorStop(0, lighten(col, 0.15)); pg.addColorStop(1, col);
+    ctx.fillStyle = pg; ctx.fill(); ctx.strokeStyle = metal(ctx, x, py, x + pw, py + ph, GOLD); ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = `800 15px ${CF}`; ctx.fillStyle = "#ffe39a"; ctx.fillText(label, x + 20, py + 28);
+    ctx.textAlign = "right"; ctx.font = `800 32px ${NF}`; ctx.fillStyle = "#fff"; ctx.fillText(val, x + pw - 20, py + 34); ctx.textAlign = "left";
+  };
+  pill(bx + bw - 400, "ATK", String(atk), "#a3141c"); pill(bx + bw - 200, "DEF", String(def), "#1f4f9a");
+  ctx.font = `600 13px ${CF}`; ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fillText(`${card.hp || ""} HP`, bx + 20, by + bh - 30);
+  ctx.fillText(`weak to ${card.weakTxt || "Mondays"}`.slice(0, 28), bx + 20, by + bh - 12);
+  // sparkles
+  const R = rng(61); for (let i = 0; i < 9; i++) twinkle(ctx, 30 + R() * (W - 60), 150 + R() * 40 + (i % 2) * 560, 2 + R() * 4, "#fff6c8");
+  drawFooter(ctx, true, 40, W - 40, 1012);
 }
 
 /* ---------- Wanted poster: aged parchment, bounty, "crimes" ---------- */
+function compassRose(ctx, x, y, r, col) {
+  ctx.save(); ctx.translate(x, y); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, r * 0.82, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 8; i++) {
+    ctx.save(); ctx.rotate((i * Math.PI) / 4); const L = i % 2 ? r * 0.6 : r * 1.05;
+    ctx.beginPath(); ctx.moveTo(0, -L); ctx.lineTo(r * 0.1, 0); ctx.lineTo(0, r * 0.1); ctx.lineTo(-r * 0.1, 0); ctx.closePath(); i % 2 ? ctx.stroke() : ctx.fill(); ctx.restore();
+  }
+  ctx.font = `800 ${r * 0.28}px ${SF}`; ctx.textAlign = "center"; ctx.fillText("N", 0, -r * 1.12); ctx.restore(); ctx.textAlign = "left";
+}
 function drawWanted(ctx, D) {
-  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, Q = D.wp, INK = Q.ink;
-  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = "#3a2615"; ctx.fill();
-  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip(); const R = rng(91); ctx.lineWidth = 2;
-  for (let y = 0; y < H; y += 6) { ctx.strokeStyle = `rgba(0,0,0,${0.08 + R() * 0.12})`; ctx.beginPath(); ctx.moveTo(0, y); for (let x = 0; x <= W; x += 50) ctx.lineTo(x, y + Math.sin(x / 120 + y / 40) * 3); ctx.stroke(); }
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, Q = D.wp, INK = Q.ink, SEA = Q.sea || ["#3c6070", "#1c3540", "#0b171d"];
+  // gold card frame
+  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = metal(ctx, 0, 0, W, H, GOLD); ctx.fill(); brushed(ctx, false);
+  // old sea chart
+  const ix = 20, iy = 20, iw = W - 40, ih = H - 40;
+  ctx.save(); rr(ctx, ix, iy, iw, ih, 22); ctx.clip();
+  const sg = ctx.createRadialGradient(W / 2, H * 0.45, 60, W / 2, H / 2, 760); sg.addColorStop(0, SEA[0]); sg.addColorStop(0.6, SEA[1]); sg.addColorStop(1, SEA[2]);
+  ctx.fillStyle = sg; ctx.fillRect(ix, iy, iw, ih);
+  ctx.strokeStyle = "rgba(255,240,200,.06)"; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = ix; x < ix + iw; x += 60) { ctx.moveTo(x, iy); ctx.lineTo(x, iy + ih); } for (let y = iy; y < iy + ih; y += 60) { ctx.moveTo(ix, y); ctx.lineTo(ix + iw, y); } ctx.stroke();
+  ctx.strokeStyle = "rgba(255,230,170,.1)"; ctx.beginPath();
+  [[110, 880], [W - 120, 260]].forEach(([cx, cy]) => { for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * 1200, cy + Math.sin(a) * 1200); } }); ctx.stroke();
+  ctx.strokeStyle = "rgba(255,240,210,.14)"; ctx.lineWidth = 1.5; const R = rng(77);
+  for (let i = 0; i < 26; i++) { const x = ix + R() * iw, y = iy + R() * ih; ctx.beginPath(); ctx.arc(x, y, 7, Math.PI * 1.1, Math.PI * 1.9); ctx.arc(x + 12, y, 7, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); }
+  compassRose(ctx, W - 108, H - 132, 58, "rgba(245,210,122,.55)");
   ctx.restore();
-  // the poster, with rough edges
-  const px = 34, py = 30, pw = W - 68, ph = H - 60;
-  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.55)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6;
-  ctx.beginPath(); const Rr = rng(13), jag = (n) => (Rr() - 0.5) * n;
-  ctx.moveTo(px, py); for (let x = px; x <= px + pw; x += 18) ctx.lineTo(x, py + jag(5)); for (let y = py; y <= py + ph; y += 18) ctx.lineTo(px + pw + jag(5), y);
-  for (let x = px + pw; x >= px; x -= 18) ctx.lineTo(x, py + ph + jag(5)); for (let y = py + ph; y >= py; y -= 18) ctx.lineTo(px + jag(5), y); ctx.closePath();
-  const pg = ctx.createRadialGradient(W / 2, H / 2, 120, W / 2, H / 2, 640); pg.addColorStop(0, Q.paper); pg.addColorStop(1, Q.paper2);
+  rr(ctx, ix, iy, iw, ih, 22); ctx.strokeStyle = "rgba(60,40,10,.6)"; ctx.lineWidth = 2; ctx.stroke();
+  // HUB CREW ribbon
+  const rx0 = 150, rx1 = W - 150, ry = 34, rh = 40;
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+  polyPath(ctx, [[rx0 - 30, ry + 6], [rx0, ry + 6], [rx0, ry + rh + 6], [rx0 - 30, ry + rh + 6], [rx0 - 16, ry + rh / 2 + 6]]); ctx.fillStyle = "#7d0a10"; ctx.fill();
+  polyPath(ctx, [[rx1 + 30, ry + 6], [rx1, ry + 6], [rx1, ry + rh + 6], [rx1 + 30, ry + rh + 6], [rx1 + 16, ry + rh / 2 + 6]]); ctx.fill();
+  rr(ctx, rx0, ry, rx1 - rx0, rh, 4); const rg = ctx.createLinearGradient(0, ry, 0, ry + rh); rg.addColorStop(0, "#e8343c"); rg.addColorStop(1, "#9c0f18"); ctx.fillStyle = rg; ctx.fill(); ctx.restore();
+  ctx.fillStyle = "#ffe39a"; ctx.textAlign = "center"; ctx.font = `800 18px ${CF}`; ctx.fillText(`HUB CREW  ·  ${(card.stage || "BASIC").toUpperCase()}  ·  ${card.hp || ""} HP`, W / 2, ry + 27); ctx.textAlign = "left";
+  // the poster, nailed on at a slight tilt
+  const px = 64, py = 90, pw = W - 128, ph = 714;
+  ctx.save(); ctx.translate(W / 2, py + ph / 2); ctx.rotate(-0.018); ctx.translate(-W / 2, -(py + ph / 2));
+  const Rr = rng(13), jag = (n) => (Rr() - 0.5) * n, edge = () => {
+    ctx.beginPath(); ctx.moveTo(px, py);
+    for (let x = px; x <= px + pw; x += 16) ctx.lineTo(x, py + jag(6)); for (let y = py; y <= py + ph; y += 16) ctx.lineTo(px + pw + jag(6), y);
+    for (let x = px + pw; x >= px; x -= 16) ctx.lineTo(x, py + ph + jag(6)); for (let y = py + ph; y >= py; y -= 16) ctx.lineTo(px + jag(6), y); ctx.closePath();
+  };
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8; edge();
+  const pg = ctx.createRadialGradient(W / 2, py + ph * 0.45, 100, W / 2, py + ph / 2, 520); pg.addColorStop(0, Q.paper); pg.addColorStop(1, Q.paper2);
   ctx.fillStyle = pg; ctx.fill(); ctx.restore();
-  ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip(); const Rs = rng(29);
-  for (let i = 0; i < 14; i++) { const sx = px + Rs() * pw, sy = py + Rs() * ph, sr = 20 + Rs() * 70; const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr); sg.addColorStop(0, "rgba(120,80,30,.12)"); sg.addColorStop(1, "rgba(120,80,30,0)"); ctx.fillStyle = sg; ctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2); }
+  ctx.save(); edge(); ctx.clip();
+  ctx.shadowColor = "rgba(70,30,5,.9)"; ctx.shadowBlur = 40; ctx.lineWidth = 26; ctx.strokeStyle = "rgba(90,45,10,.45)"; edge(); ctx.stroke(); ctx.shadowColor = "transparent";
+  const Rs = rng(29); for (let i = 0; i < 12; i++) { const sx = px + Rs() * pw, sy = py + Rs() * ph, sr = 20 + Rs() * 60; const st = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr); st.addColorStop(0, "rgba(120,80,30,.13)"); st.addColorStop(1, "rgba(120,80,30,0)"); ctx.fillStyle = st; ctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2); }
   ctx.restore();
-  // pin
-  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2; ctx.beginPath(); ctx.arc(W / 2, 48, 9, 0, Math.PI * 2); ctx.fillStyle = "#b3121b"; ctx.fill(); ctx.restore();
-  // WANTED
+  [[px + 22, py + 22], [px + pw - 22, py + 22]].forEach(([x, y]) => { ctx.save(); ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fillStyle = metal(ctx, x - 8, y - 8, x + 8, y + 8, ["#d8d8d8", "#6a6a6a", "#bdbdbd"]); ctx.fill(); ctx.restore(); });
   ctx.textAlign = "center"; ctx.fillStyle = INK;
-  fitFont(ctx, "WANTED", "900", 150, SF, W - 130, 60); ctx.fillText("WANTED", W / 2, 186);
-  ctx.font = `700 15px ${CF}`; ctx.fillText("BY THE DIGITAL HUB   ·   CNY 2027", W / 2, 214);
+  fitFont(ctx, "WANTED", "900", 126, SF, pw - 90, 50);
+  ctx.save(); ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillText("WANTED", W / 2, py + 132); ctx.restore(); ctx.fillText("WANTED", W / 2, py + 130);
   // photo
   ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip(); drawPhoto(ctx, P, t, P.y + P.h / 2 + 12);
-  ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "rgba(200,150,80,.18)"; ctx.fillRect(P.x, P.y, P.w, P.h); ctx.globalCompositeOperation = "source-over";
-  if (card.holo) holo(ctx, P, 0.3); ctx.restore();
-  ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.strokeRect(P.x - 6, P.y - 6, P.w + 12, P.h + 12); ctx.lineWidth = 1.5; ctx.strokeRect(P.x, P.y, P.w, P.h);
-  drawBadge(ctx, P.x + P.w - 36, P.y + 36, 26);
-  // ALIVE & HUAT
-  const ay = P.y + P.h + 44;
-  ctx.textAlign = "center"; ctx.fillStyle = INK;
-  ctx.font = `800 30px ${SF}`; const aw = ctx.measureText("ALIVE & HUAT").width;
+  ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "rgba(205,155,85,.2)"; ctx.fillRect(P.x, P.y, P.w, P.h); ctx.globalCompositeOperation = "source-over";
+  if (card.holo) holo(ctx, P, 0.35); ctx.restore();
+  ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.strokeRect(P.x - 7, P.y - 7, P.w + 14, P.h + 14); ctx.lineWidth = 1.5; ctx.strokeRect(P.x, P.y, P.w, P.h);
+  // ALIVE & HUAT, name, bounty
+  const ay = P.y + P.h + 42;
+  ctx.textAlign = "center"; ctx.fillStyle = INK; ctx.font = `800 26px ${SF}`; const aw = ctx.measureText("ALIVE & HUAT").width;
   ctx.fillText("ALIVE & HUAT", W / 2, ay);
-  ctx.fillRect(80, ay - 11, W / 2 - aw / 2 - 100, 2.5); ctx.fillRect(W / 2 + aw / 2 + 20, ay - 11, W / 2 - aw / 2 - 100, 2.5);
-  // name + bounty
+  ctx.fillRect(px + 40, ay - 10, W / 2 - aw / 2 - px - 60, 2.5); ctx.fillRect(W / 2 + aw / 2 + 20, ay - 10, W / 2 - aw / 2 - px - 60, 2.5);
   const nm = (card.name || "Your Name").toUpperCase();
-  fitFont(ctx, nm, "900", 60, SF, W - 140, 24); ctx.fillText(nm, W / 2, ay + 66);
+  fitFont(ctx, nm, "900", 56, SF, pw - 80, 22); ctx.fillText(nm, W / 2, ay + 56);
   const bounty = Math.round(((+card.hp || 120) * 8888888) / 120).toLocaleString("en-US");
-  ctx.font = `800 52px ${NF}`; const bw = ctx.measureText(bounty + "-").width; ctx.font = `800 26px ${SF}`; const cw = ctx.measureText("S$ ").width;
-  const bx0 = W / 2 - (bw + cw) / 2;
-  ctx.textAlign = "left"; ctx.fillStyle = Q.accent; ctx.fillText("S$", bx0, ay + 124);
-  ctx.font = `800 52px ${NF}`; ctx.fillStyle = INK; ctx.fillText(bounty + "-", bx0 + cw, ay + 124);
-  // crimes
-  const cy = ay + 152;
-  ctx.textAlign = "center"; ctx.font = `800 14px ${CF}`; ctx.fillStyle = Q.accent; ctx.fillText("WANTED FOR", W / 2, cy);
-  const crimes = [];
-  if (card.ability && card.ability.name) crimes.push(card.ability.name);
-  (card.attack2 ? card.attacks : card.attacks.slice(0, 1)).forEach(m => m && m.name && crimes.push(`${m.name}${m.dmg ? " (" + m.dmg + ")" : ""}`));
-  fitFont(ctx, crimes.join("  ·  "), 700, 22, CF, W - 130, 12); ctx.fillStyle = INK; ctx.fillText(crimes.join("  ·  "), W / 2, cy + 30);
-  const seen = `Last seen near the ${t.label} cluster  ·  Weakness: ${card.weakTxt || "Mondays"}`;
-  fitFont(ctx, seen, "italic 500", 15, CF, W - 130, 10); ctx.fillStyle = rgbaHex(INK, 0.8); ctx.fillText(seen, W / 2, cy + 56);
+  ctx.font = `800 54px ${NF}`; const bw = ctx.measureText(bounty + "-").width; ctx.font = `800 28px ${SF}`; const cw = ctx.measureText("S$ ").width;
+  const bx0 = W / 2 - (bw + cw) / 2; ctx.textAlign = "left";
+  ctx.fillStyle = Q.accent; ctx.fillText("S$", bx0, ay + 110);
+  ctx.font = `800 54px ${NF}`; ctx.fillStyle = INK; ctx.fillText(bounty + "-", bx0 + cw, ay + 110);
+  ctx.font = `700 12px ${CF}`; ctx.textAlign = "center"; ctx.fillStyle = rgbaHex(INK, 0.75);
+  ctx.fillText(`LAST SEEN NEAR THE ${t.label.toUpperCase()} CLUSTER  ·  DIGITAL HUB MARINE OFFICE`, W / 2, ay + 132);
   ctx.textAlign = "left";
-  drawFooter(ctx, false, 66, W - 66, 1002);
+  ctx.restore();
+  drawBadge(ctx, W - 64, 62, 26);
+  // moves on a dark glass panel
+  const gy = 812, gh = 172;
+  rr(ctx, 40, gy, W - 80, gh, 14); ctx.fillStyle = "rgba(6,12,16,.72)"; ctx.fill();
+  ctx.strokeStyle = metal(ctx, 40, gy, W - 40, gy + gh, GOLD); ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.font = `800 13px ${CF}`; ctx.fillStyle = "#f5d27a"; ctx.fillText("WANTED FOR", 60, gy + 24);
+  ctx.save(); ctx.translate(58, gy + 28); ctx.scale(0.82, 0.82); drawMoves(ctx, 0, (gh - 34) / 0.82, true, 0, (W - 116) / 0.82); ctx.restore();
+  drawFooter(ctx, true, 40, W - 40, 1012);
 }
 
 /* ---------- Rookie sports card: chrome, team stripes, jersey number, stat line ---------- */
@@ -2911,7 +2994,7 @@ const LAYOUT_PHOTO = {
   blueprint: { x: 66, y: 152, w: 618, h: 448 }, cover: { x: 22, y: 22, w: W - 44, h: H - 44, focus: 470 },
   stamp: { x: 94, y: 176, w: 562, h: 420 }, polaroid: { x: 122, y: 172, w: 506, h: 420 },
   scroll: { x: 164, y: 158, w: 470, h: 470 }, deco: { x: 96, y: 166, w: 558, h: 450 },
-  duel: { x: 74, y: 172, w: 602, h: 520 }, wanted: { x: 96, y: 236, w: 558, h: 420 }, rookie: { x: 30, y: 30, w: W - 60, h: 720 },
+  duel: { x: 74, y: 172, w: 602, h: 520 }, wanted: { x: 104, y: 244, w: 542, h: 368 }, rookie: { x: 30, y: 30, w: W - 60, h: 720 },
 };
 const LAYOUT_DRAW = { illus: drawIllus, mosaic: drawIllus, strike: drawStrike, full: drawFull, poster: drawPoster, classic: drawClassic,
   blueprint: drawBlueprint, cover: drawCover, duel: drawDuel, wanted: drawWanted, rookie: drawRookie, stamp: drawStamp, polaroid: drawPolaroid, scroll: drawScroll, deco: drawDeco };
