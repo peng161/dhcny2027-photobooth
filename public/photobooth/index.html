@@ -207,10 +207,10 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) {
   .wall-head .btn { padding: 7px 10px; font-size: 14px; }
   .wall-head .lbl { display: none; }
   #fullBtn { display: none; }
-  .make-card { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 8;
-    padding: 12px 22px !important; font-size: 16px !important; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.55); white-space: nowrap; }
+  .make-card { position: fixed; right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 8;
+    width: 50px; height: 50px; padding: 0 !important; display: grid; place-items: center; font-size: 22px !important; line-height: 1;
+    border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,.55), 0 0 0 2px rgba(255,230,170,.35); }
   #wall.show-mode .show { padding-top: 54px; }
-  .show .mq-bot { padding-bottom: 64px; }
   #wall:not(.show-mode) .wall-grid { padding-bottom: 80px; }
 }
 @media (pointer: coarse) { #wall.idle .wall-head { opacity: 1 !important; pointer-events: auto !important; } }
@@ -633,7 +633,7 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
     <button class="btn" id="printAllBtn" type="button" hidden>🖨 Print all</button>
     <button class="btn" id="bgBtn" type="button">🎨 Background</button>
     <button class="btn" id="fullBtn" type="button">⛶ Full screen</button>
-    <a class="btn primary make-card" href="#">📷 Make your card</a>
+    <a class="btn primary make-card" href="#" aria-label="Make your card" title="Make your card">📷<span class="lbl"> Make your card</span></a>
   </div>
   <div class="wall-grid" id="wallGrid"></div>
   <div class="empty" id="wallEmpty" hidden>No cards yet. Make yours and tap <b>Post to Card Wall</b>.</div>
