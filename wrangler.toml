@@ -1,0 +1,9 @@
+name = "dhcny2027"
+pages_build_output_dir = "public"
+compatibility_date = "2026-10-01"
+
+# BOARD_PASS (event code) and ADMIN_KEY (organiser key) are set as Pages secrets, not here.
+
+[[kv_namespaces]]
+binding = "CARDS"
+id = "c4628d97b0044646a30d80b296ea2946"

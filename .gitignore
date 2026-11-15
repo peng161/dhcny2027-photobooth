@@ -1,0 +1,11 @@
+# secrets
+ORGANISER-KEY.txt
+.dev.vars
+# internal artwork (kept out of the public repo; add your own to public/photobooth/)
+public/photobooth/card-back.webp
+public/photobooth/pack-*.webp
+# tooling
+node_modules/
+.wrangler/
+.netlify/
+.DS_Store
