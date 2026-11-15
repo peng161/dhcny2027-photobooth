@@ -1,0 +1,299 @@
+{
+  "$comment": "Sample event showing how to re-skin the booth. Preview it with ?event=example-sportsday",
+  "id": "example-sportsday",
+  "everyoneTeam": "all",
+  "storage": {
+    "prefix": "sd",
+    "galleryDb": "sportsday-cards",
+    "filePrefix": "sportsday"
+  },
+  "brand": {
+    "appName": "Sports Day Card Booth",
+    "appNameHtml": "Sports Day <span>Card Booth</span>",
+    "wallName": "Sports Day Card Wall",
+    "wallNameHtml": "Sports Day <span>Card Wall</span>",
+    "tagline": "Acme Co · Sports Day 2027 · #GoTeam",
+    "setLine": "Acme Co · Sports Day 2027 · #GoTeam",
+    "banner": "GO TEAM",
+    "totalCards": 300,
+    "cardAlt": "A Sports Day card",
+    "packAlt": "Sports Day booster pack"
+  },
+  "labels": {
+    "team": "Your house",
+    "teamPicker": "House (card type)",
+    "mascot": "Mascot",
+    "mascotProp": "Mascot holds",
+    "teamColour": "House colour"
+  },
+  "teams": {
+    "red": {
+      "label": "Red",
+      "full": "Red House · Phoenix",
+      "c1": "#ffe3df",
+      "c2": "#f2a69b",
+      "sym": "#d23a2a",
+      "glyph": "sparkle"
+    },
+    "blue": {
+      "label": "Blue",
+      "full": "Blue House · Orca",
+      "c1": "#e3f0ff",
+      "c2": "#9cc4f2",
+      "sym": "#2b74d0",
+      "glyph": "cloud"
+    },
+    "green": {
+      "label": "Green",
+      "full": "Green House · Jaguar",
+      "c1": "#e7f6e1",
+      "c2": "#a8d898",
+      "sym": "#33893a",
+      "glyph": "cube"
+    },
+    "yellow": {
+      "label": "Yellow",
+      "full": "Yellow House · Falcon",
+      "c1": "#fff6d6",
+      "c2": "#efd986",
+      "sym": "#c4950f",
+      "glyph": "cursor"
+    },
+    "all": {
+      "label": "Guests",
+      "full": "Guests · cheering squad",
+      "c1": "#f3eefb",
+      "c2": "#cbbde8",
+      "sym": "#6a4aa8",
+      "glyph": "star"
+    },
+    "normal": {
+      "label": "Normal",
+      "full": "Normal",
+      "hidden": true,
+      "c1": "#f6f3ee",
+      "c2": "#d9d3c8",
+      "sym": "#9a948a",
+      "glyph": "star"
+    }
+  },
+  "defaultCard": {
+    "hp": 120,
+    "stage": "BASIC",
+    "evolves": "",
+    "type": "all",
+    "attacks": [
+      {
+        "cost": 1,
+        "name": "Warm-Up Stretch",
+        "dmg": "30",
+        "text": "Heal 10. Everyone else joins in awkwardly."
+      },
+      {
+        "cost": 3,
+        "name": "Relay Baton Pass",
+        "dmg": "20×",
+        "text": "Does 20 damage for each teammate who touched the baton."
+      }
+    ],
+    "attack2": false,
+    "luck": 7,
+    "fortune": "May your house win the tug of war.",
+    "ability": {
+      "name": "Team Spirit",
+      "text": "Prevent the first 30 damage while your house is cheering."
+    },
+    "species": "Cheer Captain Type",
+    "height": "Water bottles: 3",
+    "weight": "Sunscreen: SPF 50",
+    "flavor": "Never wins the race, always wins the photo.",
+    "weakTxt": "Uphill finishes",
+    "resistTxt": "Rain delays",
+    "retreatTxt": "One water break",
+    "rarity": "rare"
+  },
+  "text": {
+    "mascotMark": "GO TEAM",
+    "cardBack": "SPORTS DAY",
+    "blueprintChecked": "CHECKED: COACH   ·   APPROVED: {TEAM}",
+    "coverTopLine": "ACME CO  ·  SPORTS DAY 2027",
+    "coverPrice": "$5.00",
+    "coverMasthead": "GO TEAM",
+    "coverFallback": "Personal best",
+    "coverBarcode": "9 771 2027",
+    "stampTop": "ACME CO   ·   SPORTS DAY   ·   2027",
+    "stampPostmark": "TRACK POST",
+    "stampPostmarkSub": "· 2027 ·",
+    "polaroidCaption": "{team}  ·  #GoTeam  ·  2027",
+    "scrollCalligraphy": "全力以赴",
+    "decoTop": "◆   ACME CO   ◆",
+    "duelEdition": "◆ SPORTS DAY LIMITED EDITION",
+    "duelSerialPrefix": "SD27-",
+    "wantedRibbon": "MOST VALUABLE",
+    "wantedMotto": "FAST & FEARLESS",
+    "wantedCurrency": "$",
+    "wantedLastSeen": "LAST SEEN NEAR THE {TEAM} TENT  ·  ACME TRACK OFFICE",
+    "rookieShield": "ROOKIE · 2027",
+    "rookieSeries": "SPORTS DAY 1",
+    "packBrand": "GO TEAM",
+    "goatBlessing": "加油",
+    "goatCaption": "SPORTS DAY 2027",
+    "coverExclusive": "Inside {team} house",
+    "duelFallbackType": "Athlete"
+  },
+  "designs": {
+    "names": {
+      "strike": "Sports Day Holo",
+      "crimson": "Champion Crimson",
+      "duel": "Track Duel"
+    },
+    "order": null
+  },
+  "wall": {
+    "backgrounds": null,
+    "defaultBackground": "fireworks"
+  },
+  "content": {
+    "teamMoves": {
+      "red": [
+        [
+          "Phoenix Sprint",
+          "80",
+          "Rise from last place. Does 80 damage if you were behind."
+        ]
+      ],
+      "blue": [
+        [
+          "Orca Dive",
+          "60",
+          "Splash every guest on the bench. They are now Damp."
+        ]
+      ],
+      "green": [
+        [
+          "Jaguar Pounce",
+          "90",
+          "Flip a coin. If heads, steal the lead."
+        ]
+      ],
+      "yellow": [
+        [
+          "Falcon Dash",
+          "70",
+          "Move first next turn. Nobody saw you coming."
+        ]
+      ]
+    },
+    "sharedMoves": [
+      [
+        "Three-Legged Race",
+        "50",
+        "Both guests trip. Both laugh. Both take 20 damage."
+      ],
+      [
+        "Tug Of War",
+        "40×",
+        "Does 40 damage for each teammate pulling."
+      ],
+      [
+        "Egg And Spoon",
+        "30",
+        "Flip a coin. If tails, the egg drops."
+      ],
+      [
+        "Victory Lap",
+        "100",
+        "Only after winning. Wave to the crowd."
+      ]
+    ],
+    "abilities": {
+      "shared": [
+        [
+          "Personal Best",
+          "This guest's last move always does 10 more damage."
+        ],
+        [
+          "Hydrated",
+          "Heals 10 every water break."
+        ]
+      ]
+    },
+    "species": {
+      "all": [
+        "Cheer Captain Type",
+        "Sideline Coach Type"
+      ]
+    },
+    "flavor": {
+      "shared": [
+        "Brought snacks for the whole house.",
+        "Trained for months. Mostly by walking to the pantry."
+      ]
+    },
+    "stats": [
+      "Water bottles: 3",
+      "Sunscreen: SPF 50",
+      "Medals: 2",
+      "Laps: 12"
+    ],
+    "weaknesses": {
+      "shared": [
+        "Uphill finishes",
+        "Early starts",
+        "Sack races"
+      ]
+    },
+    "resistances": {
+      "shared": [
+        "Rain delays",
+        "Sunburn",
+        "Long queues"
+      ]
+    },
+    "retreats": [
+      "One water break",
+      "A shady spot",
+      "Ice pops"
+    ],
+    "stages": [
+      "INTERN",
+      "BASIC",
+      "SENIOR",
+      "LEAD",
+      "PRINCIPAL",
+      "DIRECTOR"
+    ],
+    "fortunes": {
+      "shared": [
+        "May your house win the tug of war.",
+        "Personal bests all round."
+      ]
+    },
+    "luckyNumbers": [
+      7,
+      10,
+      21,
+      42
+    ]
+  },
+  "packs": {
+    "seriesLine": "SERIES 01 · GO TEAM",
+    "series": {
+      "all": {
+        "tag": "4 HOUSES"
+      },
+      "red": {
+        "tag": "PHOENIX"
+      },
+      "blue": {
+        "tag": "ORCA"
+      },
+      "green": {
+        "tag": "JAGUAR"
+      },
+      "yellow": {
+        "tag": "FALCON"
+      }
+    }
+  }
+}

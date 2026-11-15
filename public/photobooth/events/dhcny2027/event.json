@@ -1,0 +1,1504 @@
+{
+  "$comment": "Everything specific to one event lives here. Copy this folder to start a new event.",
+  "id": "dhcny2027",
+  "everyoneTeam": "onedh",
+  "storage": {
+    "prefix": "dh",
+    "galleryDb": "onedh-cards",
+    "filePrefix": "onedh"
+  },
+  "brand": {
+    "appName": "OneDH Card Booth",
+    "appNameHtml": "OneDH <span>Card Booth</span>",
+    "wallName": "OneDH Card Wall",
+    "wallNameHtml": "OneDH <span>Card Wall</span>",
+    "tagline": "Digital Hub · CNY 2027 · #OneDH",
+    "setLine": "Digital Hub · CNY 2027 · #OneDH",
+    "banner": "ONE DSTA",
+    "totalCards": 200,
+    "cardAlt": "A OneDH card",
+    "packAlt": "Digital Hub booster pack"
+  },
+  "labels": {
+    "team": "Your cluster",
+    "teamPicker": "Cluster (card type)",
+    "mascot": "DH Monkey",
+    "mascotProp": "Monkey holds",
+    "teamColour": "Cluster colour"
+  },
+  "defaultCard": {
+    "hp": 120,
+    "stage": "BASIC",
+    "evolves": "",
+    "type": "onedh",
+    "attacks": [
+      {
+        "cost": 1,
+        "name": "Check Under The Chair",
+        "dmg": "40",
+        "text": "Search your deck for a DH Monkey and put it in your hand."
+      },
+      {
+        "cost": 3,
+        "name": "OneDH Assemble",
+        "dmg": "20×",
+        "text": "Does 20 damage for each DH team on your bench."
+      }
+    ],
+    "attack2": false,
+    "luck": 888,
+    "fortune": "May the whole hub prosper together.",
+    "ability": {
+      "name": "Monkey Escort",
+      "text": "The DH Monkey guards this guest. Prevent the first 30 damage."
+    },
+    "species": "Official Escort Type",
+    "height": "Lanyard: always on",
+    "weight": "Kopi: 3 cups/day",
+    "flavor": "Energetic, innovative and always daring to try. That's the DH way.",
+    "weakTxt": "Monday mornings",
+    "resistTxt": "Long meetings",
+    "retreatTxt": "2 kopi breaks",
+    "rarity": "rare"
+  },
+  "text": {
+    "mascotMark": "ONE DH",
+    "cardBack": "DIGITAL HUB",
+    "blueprintChecked": "CHECKED: DH MONKEY   ·   APPROVED: {TEAM}",
+    "coverTopLine": "DIGITAL HUB  ·  CNY 2027 SPECIAL",
+    "coverPrice": "S$8.88",
+    "coverMasthead": "ONE DH",
+    "coverFallback": "Huat all year",
+    "coverExclusive": "Inside the {team} cluster",
+    "duelFallbackType": "Hub Guest",
+    "coverBarcode": "9 770 2027",
+    "stampTop": "DIGITAL HUB   ·   SINGAPORE   ·   CNY 2027",
+    "stampPostmark": "DH POST",
+    "stampPostmarkSub": "· CNY 2027 ·",
+    "polaroidCaption": "{team}  ·  #OneDH  ·  CNY 2027",
+    "scrollCalligraphy": "同心協力",
+    "decoTop": "◆   DIGITAL HUB   ◆",
+    "duelEdition": "◆ CNY 2027 LIMITED EDITION",
+    "duelSerialPrefix": "DH27-",
+    "wantedRibbon": "HUB CREW",
+    "wantedMotto": "ALIVE & HUAT",
+    "wantedCurrency": "S$",
+    "wantedLastSeen": "LAST SEEN NEAR THE {TEAM} CLUSTER  ·  DIGITAL HUB MARINE OFFICE",
+    "rookieShield": "ROOKIE · 2027",
+    "rookieSeries": "DH SERIES 1",
+    "packBrand": "ONE DH",
+    "goatBlessing": "羊年大吉",
+    "goatCaption": "ONE DH · CNY 2027"
+  },
+  "designs": {
+    "names": {
+      "strike": "One DSTA Holo",
+      "crimson": "One DSTA Crimson",
+      "duel": "Hub Duel"
+    },
+    "order": null
+  },
+  "wall": {
+    "backgrounds": null,
+    "defaultBackground": "ink"
+  },
+  "teams": {
+    "ai": {
+      "label": "AI",
+      "full": "AI · Artificial Intelligence",
+      "c1": "#f1e8ff",
+      "c2": "#c9abf0",
+      "sym": "#7b3fd0",
+      "glyph": "sparkle"
+    },
+    "ms": {
+      "label": "M&S",
+      "full": "M&S · Modelling & Simulation",
+      "c1": "#e0f6f6",
+      "c2": "#91d4d4",
+      "sym": "#11888a",
+      "glyph": "cube"
+    },
+    "cape": {
+      "label": "CAPE",
+      "full": "CAPE · Cloud & Platform Eng",
+      "c1": "#e3f0ff",
+      "c2": "#9cc4f2",
+      "sym": "#2b74d0",
+      "glyph": "cloud"
+    },
+    "swe": {
+      "label": "SWE",
+      "full": "SWE · Software Engineering",
+      "c1": "#e7f6e1",
+      "c2": "#a8d898",
+      "sym": "#33893a",
+      "glyph": "code"
+    },
+    "diux": {
+      "label": "DI&UX",
+      "full": "DI&UX · Design Innovation & User Experience",
+      "c1": "#ffeae1",
+      "c2": "#f6b49b",
+      "sym": "#e0592a",
+      "glyph": "cursor"
+    },
+    "onedh": {
+      "label": "OneDH",
+      "full": "OneDH · everyone & guests",
+      "c1": "#fff3d6",
+      "c2": "#efcf86",
+      "sym": "#c48a12",
+      "glyph": "monkey",
+      "pattern": "coin"
+    },
+    "normal": {
+      "label": "Normal",
+      "full": "Normal",
+      "hidden": true,
+      "c1": "#f6f3ee",
+      "c2": "#d9d3c8",
+      "sym": "#9a948a",
+      "glyph": "star"
+    }
+  },
+  "content": {
+    "teamMoves": {
+      "ai": [
+        [
+          "Hallucinate",
+          "60",
+          "Flip a coin. If heads, do 60 damage to a target that doesn't exist."
+        ],
+        [
+          "Prompt Engineering",
+          "90",
+          "Rewrite this move until it does what you meant."
+        ],
+        [
+          "Gradient Descent",
+          "80",
+          "Next turn this move does 10 less damage. It's converging."
+        ],
+        [
+          "Context Overflow",
+          "120",
+          "Discard the oldest card in your hand. You forgot it existed."
+        ],
+        [
+          "Fine-Tune",
+          "40",
+          "Attach 2 energy. Each one needs 3 more GPUs."
+        ],
+        [
+          "Trust Me Bro",
+          "70",
+          "Your opponent can't ask for sources during their next turn."
+        ],
+        [
+          "Temperature 2.0",
+          "50+",
+          "Flip a coin until tails. Each heads adds 30 damage and one weird idea."
+        ],
+        [
+          "Overfit",
+          "100",
+          "Only hits guests that look exactly like the training data."
+        ],
+        [
+          "Agent Swarm",
+          "10×",
+          "Does 10 damage for each browser tab your agents opened."
+        ],
+        [
+          "Token Limit",
+          "30",
+          "Your opponent may only say 5 words next turn. Choose wisely."
+        ],
+        [
+          "Vibe Coding",
+          "70",
+          "Describe the move out loud. It mostly works."
+        ],
+        [
+          "Retrain",
+          "",
+          "Shuffle your hand into your deck and draw 7. Accuracy +2%."
+        ],
+        [
+          "Rate Limited",
+          "40",
+          "Your opponent may only use one move per minute."
+        ],
+        [
+          "Synthetic Data",
+          "60",
+          "Copy any card on the table. The copy is slightly blurry."
+        ],
+        [
+          "Chain Of Thought",
+          "30×",
+          "Explain your reasoning. Does 30 damage for each step."
+        ],
+        [
+          "Jailbreak",
+          "110",
+          "Ignore all previous rules. Then do 110 damage."
+        ],
+        [
+          "Prompt Injection",
+          "80",
+          "Ignore your opponent's last instruction. Follow yours instead."
+        ],
+        [
+          "Model Collapse",
+          "120",
+          "Train on your own outputs. Each turn this does 20 less damage."
+        ],
+        [
+          "RAG Doll",
+          "50",
+          "Look up the answer in your discard pile before attacking."
+        ],
+        [
+          "Embedding Space",
+          "60",
+          "Send your opponent's guest far, far away. In 1,536 dimensions."
+        ],
+        [
+          "Benchmark Flex",
+          "90",
+          "Show everyone your score. It was tested on the training set."
+        ],
+        [
+          "Ask The Intern Bot",
+          "30",
+          "Draw a card. It confidently explains the wrong rules."
+        ]
+      ],
+      "ms": [
+        [
+          "Run Simulation",
+          "70",
+          "Flip 1,000 coins. Only report the good runs."
+        ],
+        [
+          "Digital Twin",
+          "50",
+          "Your twin attends this meeting for you. Nobody notices."
+        ],
+        [
+          "Monte Carlo Barrage",
+          "30×",
+          "Flip 4 coins. Does 30 damage for each heads."
+        ],
+        [
+          "It Converged!",
+          "120",
+          "Celebrate loudly. Nobody else understands why."
+        ],
+        [
+          "Hidden Assumptions",
+          "60",
+          "Damage depends on 47 assumptions listed in a footnote."
+        ],
+        [
+          "Model Validated",
+          "100",
+          "Only works if reality agrees. Reality is negotiable."
+        ],
+        [
+          "Wargame",
+          "120",
+          "Simulate your opponent's next three turns. Smile knowingly."
+        ],
+        [
+          "Butterfly Effect",
+          "10",
+          "Does 10 damage here and 200 damage in a parallel universe."
+        ],
+        [
+          "Needs More Compute",
+          "90",
+          "This move runs all weekend. Results on Monday."
+        ],
+        [
+          "Rendering...",
+          "99",
+          "Does 99 damage. The last 1% takes another hour."
+        ],
+        [
+          "Twin Swap",
+          "50",
+          "Swap places with your digital twin. Nobody can tell."
+        ],
+        [
+          "Stochastic Strike",
+          "10×",
+          "Roll a die 10 times. Report the mean with confidence."
+        ],
+        [
+          "Converge Or Bust",
+          "150",
+          "Flip a coin. If tails, run it again next turn."
+        ],
+        [
+          "Scenario Planning",
+          "40",
+          "Look at your opponent's next 3 possible moves. Prepare for all of them."
+        ],
+        [
+          "Physics Engine",
+          "80",
+          "Your opponent's guest is now affected by gravity. Mostly."
+        ],
+        [
+          "Overnight Batch Job",
+          "200",
+          "This move resolves tomorrow morning."
+        ],
+        [
+          "Sensitivity Analysis",
+          "40×",
+          "Nudge one assumption. Does 40 damage for each panic it causes."
+        ],
+        [
+          "Agent-Based Chaos",
+          "70",
+          "Release 10,000 tiny agents. They all queue for the buffet."
+        ],
+        [
+          "Calibrate",
+          "50",
+          "Adjust this move until it matches last year's results exactly."
+        ],
+        [
+          "Time Step Zero",
+          "",
+          "Rewind the game to the start. Keep your snacks."
+        ],
+        [
+          "Ensemble Run",
+          "20×",
+          "Run 5 models. Does 20 damage for each one that agrees."
+        ],
+        [
+          "Unrealistic Physics",
+          "110",
+          "Your guest walks through a wall. The model says it's fine."
+        ]
+      ],
+      "cape": [
+        [
+          "Have You Tried Restarting?",
+          "80",
+          "Turn your opponent off and on again. Remove all their energy."
+        ],
+        [
+          "It's Always DNS",
+          "60",
+          "It's not DNS. There's no way it's DNS. It was DNS."
+        ],
+        [
+          "Works In Staging",
+          "70",
+          "This move only does damage in staging. Production is a different story."
+        ],
+        [
+          "3am Pager",
+          "90",
+          "Wake your opponent's sleeping guest. They are now Grumpy."
+        ],
+        [
+          "Cloud Bill Shock",
+          "120",
+          "Your opponent discards 3 cards. Finance wants a meeting."
+        ],
+        [
+          "YAML Indentation",
+          "10×",
+          "Flip a coin for each space. You will still get it wrong."
+        ],
+        [
+          "Rollback!",
+          "100",
+          "Undo your opponent's last move. And yours. And all of Tuesday."
+        ],
+        [
+          "Single Point Of Failure",
+          "150",
+          "Knocks out every guest in play, including this one."
+        ],
+        [
+          "Won't Fix",
+          "50",
+          "Close your opponent's ticket without reading it. Heal 50."
+        ],
+        [
+          "Auto-Scale",
+          "40+",
+          "Does 20 more damage for each person who pinged you today."
+        ],
+        [
+          "Scale To Zero",
+          "",
+          "Your opponent's guest sleeps until someone sends a request."
+        ],
+        [
+          "Chaos Monkey",
+          "90",
+          "Knock out a random guest. Everyone learns something."
+        ],
+        [
+          "Hotfix In Prod",
+          "120",
+          "Does 120 damage. Do not tell anyone."
+        ],
+        [
+          "Load Balancer",
+          "30×",
+          "Spread 30 damage across each of your opponent's guests."
+        ],
+        [
+          "Certificate Expired",
+          "70",
+          "Your opponent's guest can't connect until next turn."
+        ],
+        [
+          "Blue-Green Deploy",
+          "60",
+          "Swap your active guest for a fresh copy. Nobody notices."
+        ],
+        [
+          "Terraform Apply",
+          "100",
+          "Rebuild your opponent's bench from scratch. Pray the state file is right."
+        ],
+        [
+          "Cold Start",
+          "20",
+          "Slow the first time. Very fast after that."
+        ],
+        [
+          "Kubernetes Shuffle",
+          "60",
+          "Move your opponent's guests to random nodes."
+        ],
+        [
+          "Disaster Recovery Drill",
+          "",
+          "Heal all damage. Pretend it was planned."
+        ],
+        [
+          "SLA Breach",
+          "130",
+          "Does 130 damage. Your opponent gets a service credit."
+        ],
+        [
+          "Zero Trust",
+          "50",
+          "Your opponent must show their badge before every move."
+        ]
+      ],
+      "swe": [
+        [
+          "Works On My Machine",
+          "70",
+          "If your opponent complains, flip a coin. If heads, ignore them."
+        ],
+        [
+          "Force Push",
+          "130",
+          "Discard your opponent's last 3 cards. No one can get them back."
+        ],
+        [
+          "Ship It Friday",
+          "100",
+          "Flip a coin. If tails, this guest also takes 100 damage."
+        ],
+        [
+          "Rubber Duck Debug",
+          "40",
+          "Look at your opponent's hand. Explain it out loud."
+        ],
+        [
+          "Merge Conflict",
+          "60",
+          "Both active guests are now Confused."
+        ],
+        [
+          "Refactor",
+          "50",
+          "Move all damage from this guest to the tech debt pile."
+        ],
+        [
+          "Copy From Forum",
+          "80",
+          "Use any move from any card. Don't read what it does."
+        ],
+        [
+          "404 Not Found",
+          "404",
+          "Your opponent's active guest can't be found next turn."
+        ],
+        [
+          "Infinite Loop",
+          "10×",
+          "Flip a coin until... flip a coin until... flip a coin until..."
+        ],
+        [
+          "LGTM",
+          "20",
+          "Approve your opponent's move without reading it. Heal 20."
+        ],
+        [
+          "Git Blame",
+          "60",
+          "Find out who wrote your opponent's last move. Stare at them."
+        ],
+        [
+          "Stack Trace",
+          "20×",
+          "Does 20 damage for each line nobody reads."
+        ],
+        [
+          "Code Freeze",
+          "",
+          "Your opponent can't change anything until after the event."
+        ],
+        [
+          "Pending Review",
+          "90",
+          "This move lands after 2 approvals."
+        ],
+        [
+          "It Compiles!",
+          "100",
+          "Celebrate. Ignore the 47 warnings."
+        ],
+        [
+          "Tabs Vs Spaces",
+          "50",
+          "Both guests start arguing. Nobody attacks next turn."
+        ],
+        [
+          "Off By One",
+          "99",
+          "Meant to do 100 damage. Close enough."
+        ],
+        [
+          "Legacy Code",
+          "70",
+          "Nobody knows how this move works. Do not touch it."
+        ],
+        [
+          "Unit Test Shield",
+          "",
+          "Prevent all damage from moves that have no tests."
+        ],
+        [
+          "Sprint Planning",
+          "30×",
+          "Does 30 damage for each story point nobody agreed on."
+        ],
+        [
+          "Hello World",
+          "10",
+          "Your very first move. Everyone claps."
+        ],
+        [
+          "Dependency Hell",
+          "120",
+          "Your opponent must update 312 packages before attacking."
+        ]
+      ],
+      "diux": [
+        [
+          "Pixel Perfect",
+          "80",
+          "Move this card 1px to the left, then do 80 damage."
+        ],
+        [
+          "User Research",
+          "30",
+          "Look at your opponent's top 5 cards. Ask how they feel."
+        ],
+        [
+          "Design System",
+          "70",
+          "All your guests now use the same font. Heal 20 from each."
+        ],
+        [
+          "Dark Mode",
+          "90",
+          "Your opponent's active guest can't see during their next turn."
+        ],
+        [
+          "Make The Logo Bigger",
+          "60",
+          "Your opponent's guest grows 20%. So does the damage."
+        ],
+        [
+          "Figma Prototype",
+          "50",
+          "This move looks like it works. Flip a coin to find out."
+        ],
+        [
+          "Comic Sans Strike",
+          "120",
+          "Change your opponent's font. They lose the will to fight."
+        ],
+        [
+          "Hamburger Menu",
+          "40",
+          "Hide all your opponent's moves behind three lines."
+        ],
+        [
+          "Usability Test",
+          "60",
+          "Your opponent must use their next move with no instructions."
+        ],
+        [
+          "Whitespace",
+          "",
+          "Give everyone room to breathe. Heal 30 from each of your guests."
+        ],
+        [
+          "Undo Undo Undo",
+          "",
+          "Return the board to how it looked 10 minutes ago."
+        ],
+        [
+          "Kerning Crisis",
+          "70",
+          "Your opponent's guest can't stop noticing the gaps."
+        ],
+        [
+          "Wireframe Slam",
+          "80",
+          "Low fidelity. High damage."
+        ],
+        [
+          "A/B Test",
+          "50×",
+          "Flip a coin. Heads: 50 damage. Tails: test again."
+        ],
+        [
+          "Accessibility Check",
+          "40",
+          "Now everyone can read the cards. Heal 20."
+        ],
+        [
+          "Brand Refresh",
+          "110",
+          "Same guest, new colours. Your opponent is Confused."
+        ],
+        [
+          "Persona Pivot",
+          "60",
+          "Your opponent's guest is now a 34-year-old busy parent."
+        ],
+        [
+          "Sticky Note Storm",
+          "20×",
+          "Does 20 damage for each sticky note on the wall."
+        ],
+        [
+          "Rounded Corners",
+          "40",
+          "Soften your opponent's attack. Prevent 30 damage."
+        ],
+        [
+          "Micro-Interaction",
+          "70",
+          "A tiny animation plays. Your opponent smiles despite themselves."
+        ],
+        [
+          "Stakeholder Feedback",
+          "90",
+          "Change everything at the last minute."
+        ],
+        [
+          "Empty State",
+          "",
+          "Your opponent's bench looks clean and calm. Nothing happens."
+        ]
+      ],
+      "onedh": [
+        [
+          "Town Hall",
+          "100",
+          "Does 10 damage to every guest. They all have questions."
+        ],
+        [
+          "Quick Sync",
+          "30",
+          "Every guest must attend. This takes the whole turn."
+        ],
+        [
+          "Circle Back",
+          "40",
+          "Return this move to your hand. Use it next quarter."
+        ],
+        [
+          "Strategic Vision",
+          "120",
+          "Look at the top 3 cards of every deck. Plan accordingly."
+        ],
+        [
+          "Take It Offline",
+          "50",
+          "Your opponent's next move happens in another meeting."
+        ],
+        [
+          "Approved",
+          "150",
+          "Can only be used with three signatures."
+        ],
+        [
+          "Open Door Policy",
+          "20",
+          "Your opponent may visit your bench. Kopi provided."
+        ],
+        [
+          "Team Bonding",
+          "60",
+          "Each of your guests heals 20. Attendance is compulsory."
+        ],
+        [
+          "All Hands On Deck",
+          "20×",
+          "Does 20 damage for each person in the room."
+        ],
+        [
+          "Lunch And Learn",
+          "60",
+          "Draw 2 cards. Snacks provided."
+        ],
+        [
+          "Mentorship",
+          "",
+          "Give one of your guests 30 HP and a pep talk."
+        ],
+        [
+          "Hackathon",
+          "150",
+          "Only usable after midnight. Pizza required."
+        ],
+        [
+          "Town Hall Q&A",
+          "70",
+          "Your opponent must answer one question honestly."
+        ],
+        [
+          "Cross-Cluster Collab",
+          "30×",
+          "Does 30 damage for each different cluster on your bench."
+        ],
+        [
+          "Lift Lobby Chat",
+          "40",
+          "Learn your opponent's next move while waiting for the lift."
+        ],
+        [
+          "Pantry Summit",
+          "60",
+          "Every guest gathers in the pantry. Big decisions are made."
+        ],
+        [
+          "Year-End Review",
+          "100",
+          "Look back on every move this game. Use the best one again."
+        ],
+        [
+          "Welcome Aboard",
+          "",
+          "Bring a new guest to your bench with full HP and a lanyard."
+        ],
+        [
+          "Hub Huddle",
+          "80",
+          "All your guests attack together. Nobody knows who's leading."
+        ]
+      ]
+    },
+    "sharedMoves": [
+      [
+        "Red Packet Rain",
+        "88",
+        "Draw 2 cards. Huat ah!"
+      ],
+      [
+        "Lo Hei Toss",
+        "80",
+        "Toss everything higher. Heal 20 from each of your guests."
+      ],
+      [
+        "Lion Dance",
+        "70",
+        "Your opponent's active guest is now Dazzled."
+      ],
+      [
+        "Mandarin Exchange",
+        "20",
+        "Swap a card with your opponent. You both get good luck."
+      ],
+      [
+        "Firecracker Burst",
+        "50×",
+        "Flip 3 coins. Does 50 damage for each heads."
+      ],
+      [
+        "Monkey Business",
+        "60",
+        "Flip a coin. If heads, borrow your opponent's DH lanyard."
+      ],
+      [
+        "OneDH Assemble",
+        "20×",
+        "Does 20 damage for each DH team on your bench."
+      ],
+      [
+        "Check Under The Chair",
+        "40",
+        "Search your deck for a DH Monkey and put it in your hand."
+      ],
+      [
+        "Lucky Draw",
+        "?",
+        "Flip a coin. Heads: win a prize. Tails: try again next year."
+      ],
+      [
+        "Dare To Try",
+        "100",
+        "This move always works the first time you try it."
+      ],
+      [
+        "Huat Ah!",
+        "168",
+        "A lucky number. This move can't miss during Chinese New Year."
+      ],
+      [
+        "Reunion Dinner",
+        "",
+        "Heal all damage from all your guests. Nobody leaves hungry."
+      ],
+      [
+        "Pineapple Tart Rush",
+        "50",
+        "Discard a card. You ate it."
+      ],
+      [
+        "Bak Kwa Slap",
+        "90",
+        "Smells so good your opponent forgets their next move."
+      ],
+      [
+        "Chope Seat",
+        "30",
+        "Put a tissue packet on your opponent's bench. That spot is yours."
+      ],
+      [
+        "Kopi O Kosong",
+        "60",
+        "This guest can't fall asleep for 3 turns."
+      ],
+      [
+        "Lanyard Whip",
+        "70",
+        "Flip a coin. If heads, your opponent's guest is Badge-Checked."
+      ],
+      [
+        "Steamboat Splash",
+        "110",
+        "Both active guests take 20 damage. Worth it."
+      ],
+      [
+        "God Of Fortune",
+        "120",
+        "Look at the top card of your deck. It's lucky."
+      ],
+      [
+        "Ang Bao Shield",
+        "40",
+        "Prevent all damage to this guest next turn. Give an ang bao."
+      ],
+      [
+        "Yusheng Toss",
+        "88",
+        "Toss higher for more luck. Each of your guests heals 20."
+      ],
+      [
+        "Ang Bao Ambush",
+        "66",
+        "Your opponent opens an empty red packet. Shocking."
+      ],
+      [
+        "Nian Beast Roar",
+        "130",
+        "Scare away bad luck. Your opponent discards a card."
+      ],
+      [
+        "Firecracker Chain",
+        "20×",
+        "Does 20 damage for each pop. Very loud."
+      ],
+      [
+        "Spring Couplets",
+        "40",
+        "Stick a blessing on your bench. Heal 40."
+      ],
+      [
+        "Kueh Lapis Layers",
+        "50",
+        "Add one layer of defence each turn. Delicious."
+      ],
+      [
+        "Prosperity Shout",
+        "168",
+        "Only works if everyone shouts “Huat!”"
+      ],
+      [
+        "Mahjong Master",
+        "100",
+        "Flip 3 coins. If all heads, you win the game. Probably."
+      ],
+      [
+        "Lantern Riddle",
+        "50",
+        "Your opponent must solve a riddle before attacking."
+      ],
+      [
+        "Prosperity Toss",
+        "88",
+        "Flip a coin. If heads, draw 2 cards and shout “Huat!”"
+      ],
+      [
+        "Visiting Relatives",
+        "40",
+        "Your opponent's guest must answer: “So, when are you getting married?”"
+      ],
+      [
+        "Love Letter Crunch",
+        "60",
+        "So crunchy your opponent can't hear their next instruction."
+      ],
+      [
+        "Fireworks Finale",
+        "140",
+        "Discard all your energy. Light up the sky."
+      ],
+      [
+        "New Year Clothes",
+        "30",
+        "This guest gains 30 HP. Looking sharp."
+      ],
+      [
+        "Tangerine Toss",
+        "70",
+        "Throw two tangerines. Each one brings good luck."
+      ],
+      [
+        "Spring Cleaning",
+        "",
+        "Discard any bad-luck cards in your hand. Draw the same number."
+      ]
+    ],
+    "abilities": {
+      "ai": [
+        [
+          "Autocomplete",
+          "Once per turn, finish your opponent's sentence for them."
+        ],
+        [
+          "Always Learning",
+          "Each time this guest is hit, it gets 10 HP smarter."
+        ],
+        [
+          "Copilot",
+          "Your other guests' moves cost 1 less energy."
+        ],
+        [
+          "Multimodal",
+          "This guest attacks with text, images and vibes."
+        ],
+        [
+          "Zero-Shot",
+          "This guest's first move each game always works."
+        ],
+        [
+          "Self-Attention",
+          "This guest focuses on the most important card in play."
+        ],
+        [
+          "Guardrails",
+          "Prevent damage from moves your opponent can't explain."
+        ]
+      ],
+      "ms": [
+        [
+          "What-If",
+          "Once per turn, rewind your opponent's last coin flip."
+        ],
+        [
+          "Error Bars",
+          "Each hit on this guest does somewhere between 0 and 100 damage."
+        ],
+        [
+          "Twin Mode",
+          "A digital twin sits on your bench. It takes the blame."
+        ],
+        [
+          "Monte Carlo Mind",
+          "Flip coins twice and keep the better result."
+        ],
+        [
+          "High Fidelity",
+          "This guest's moves are accurate to 4 decimal places."
+        ],
+        [
+          "Steady State",
+          "This guest can't take more than 60 damage in one turn."
+        ],
+        [
+          "Parameter Sweep",
+          "Once per turn, try every option and keep the best."
+        ]
+      ],
+      "cape": [
+        [
+          "Self-Healing",
+          "Heals 20 each turn. Nobody knows how. Nobody touches it."
+        ],
+        [
+          "On-Call Hero",
+          "This guest can't be put to Sleep. Literally."
+        ],
+        [
+          "Don't Touch It",
+          "This guest works. It can't be moved, changed or improved."
+        ],
+        [
+          "Auto-Scaling",
+          "This guest gains 10 HP for each new visitor."
+        ],
+        [
+          "Always On-Call",
+          "This guest responds to any attack within 5 minutes."
+        ],
+        [
+          "High Availability",
+          "If this guest is knocked out, flip a coin. Heads: it comes back."
+        ],
+        [
+          "Infra As Code",
+          "Rebuild this guest exactly as it was at the start of your turn."
+        ]
+      ],
+      "swe": [
+        [
+          "Hotfix",
+          "Once per turn, remove 30 damage. Do not test it."
+        ],
+        [
+          "Senior Dev",
+          "Your opponent's bugs become features."
+        ],
+        [
+          "Pair Programming",
+          "This guest's moves do 20 more damage while a teammate watches."
+        ],
+        [
+          "Clean Code",
+          "Well-named moves cost 1 less energy."
+        ],
+        [
+          "10x Mindset",
+          "Once per game, do 10 times the damage. Then nap."
+        ],
+        [
+          "Code Review",
+          "Your opponent's moves need your approval first."
+        ],
+        [
+          "Ship It",
+          "This guest's first move each turn costs 1 less energy."
+        ]
+      ],
+      "diux": [
+        [
+          "User-Centred",
+          "Your opponent must explain their moves in plain English."
+        ],
+        [
+          "Golden Ratio",
+          "This guest looks 1.618 times better than everyone else."
+        ],
+        [
+          "Delightful",
+          "Every move this guest makes comes with a micro-animation."
+        ],
+        [
+          "Design Thinking",
+          "Before attacking, empathise with your opponent."
+        ],
+        [
+          "Pixel Shield",
+          "Prevent 10 damage for each pixel out of place."
+        ],
+        [
+          "Visual Hierarchy",
+          "Your biggest move always goes first."
+        ],
+        [
+          "Inclusive Design",
+          "Every guest on your bench can use this ability."
+        ]
+      ],
+      "onedh": [
+        [
+          "One DH",
+          "Every guest on your bench counts as every team."
+        ],
+        [
+          "Open Door",
+          "Once per turn, a guest may join from any other team."
+        ],
+        [
+          "Leadership",
+          "Your guests' moves do 10 more damage. Morale is up."
+        ],
+        [
+          "Hub Spirit",
+          "Each guest on your bench heals 10 every turn."
+        ],
+        [
+          "Stronger Together",
+          "Does 20 more damage for each cluster on your bench."
+        ],
+        [
+          "Common Goal",
+          "All your guests share their HP."
+        ],
+        [
+          "Hub Pride",
+          "This guest gets 20 more HP for every DH lanyard in the room."
+        ]
+      ],
+      "shared": [
+        [
+          "Year Of Fortune",
+          "Flip a coin each turn. If heads, draw a card. Huat!"
+        ],
+        [
+          "Monkey Escort",
+          "The DH Monkey guards this guest. Prevent the first 30 damage."
+        ],
+        [
+          "Lanyard Power",
+          "This guest can enter any room in the building."
+        ],
+        [
+          "Kopi Powered",
+          "This guest's moves cost 1 less energy before 10am."
+        ],
+        [
+          "Lucky Draw Winner",
+          "All of this guest's coin flips are heads. Probably."
+        ],
+        [
+          "Lucky Red",
+          "While wearing red, all your coin flips are heads."
+        ],
+        [
+          "Reunion",
+          "Bring a benched guest back with full HP."
+        ],
+        [
+          "Huat Mode",
+          "This guest's moves do double damage during CNY."
+        ],
+        [
+          "Fortune Favours",
+          "Once per game, change a coin flip to heads."
+        ],
+        [
+          "Plum Blossom",
+          "Blooms in the cold. This guest gets stronger when behind."
+        ],
+        [
+          "Open House",
+          "Any guest may visit your bench. Bring oranges."
+        ]
+      ]
+    },
+    "species": {
+      "ai": [
+        "Prompt Whisperer Type",
+        "Neural Net Type",
+        "GPU Hoarder Type",
+        "LLM Tamer Type"
+      ],
+      "ms": [
+        "Simulation Type",
+        "Digital Twin Type",
+        "Number Cruncher Type",
+        "Model Builder Type"
+      ],
+      "cape": [
+        "Cloud Native Type",
+        "On-Call Hero Type",
+        "YAML Wrangler Type",
+        "Platform Type"
+      ],
+      "swe": [
+        "Full Stack Type",
+        "Bug Hunter Type",
+        "10x Dev Type",
+        "Code Review Type"
+      ],
+      "diux": [
+        "Pixel Pusher Type",
+        "User Advocate Type",
+        "Figma Wizard Type",
+        "Design Thinker Type"
+      ],
+      "onedh": [
+        "Hub Hero Type",
+        "Leadership Type",
+        "Guest Star Type",
+        "Official Escort Type"
+      ]
+    },
+    "flavor": {
+      "ai": [
+        "It asks the model first. It asks humans only when the model is down.",
+        "Trained on every snack in the pantry. Predicts lunch with 97% accuracy."
+      ],
+      "ms": [
+        "It has simulated this party 10,000 times. This is the best run so far.",
+        "Never makes a decision without running it in a digital twin first."
+      ],
+      "cape": [
+        "It sleeps with one eye on the dashboards. The dashboards are always green.",
+        "It once scaled to 1,000 pods just to fetch a kopi."
+      ],
+      "swe": [
+        "It said the fix would take five minutes. That was last year.",
+        "Its code has no bugs. Only undocumented features."
+      ],
+      "diux": [
+        "It can spot a misaligned button from across the room.",
+        "It has 42 shades of grey in its palette and uses all of them."
+      ],
+      "onedh": [
+        "Its calendar has no free slots, yet it always makes time for lo hei.",
+        "Energetic, innovative and always daring to try. That's the DH way."
+      ],
+      "shared": [
+        "Found most often near the pantry during lucky draw season.",
+        "Wears the DH lanyard with pride, even on weekends.",
+        "Has never missed a lucky draw. Has never won one either.",
+        "Knows where every power socket in the building is.",
+        "Will trade any card for one more pineapple tart."
+      ]
+    },
+    "stats": [
+      "Kopi: 3 cups/day",
+      "Tabs open: 47",
+      "Meetings: back-to-back",
+      "Commits: 1,024",
+      "Uptime: 99.99%",
+      "Bugs fixed: ∞",
+      "GPU: always hungry",
+      "Lanyard: always on",
+      "Teh peng: 2/day",
+      "Ang bao: collecting"
+    ],
+    "weaknesses": {
+      "ai": [
+        "Rate limits",
+        "GPU shortages",
+        "Vague prompts"
+      ],
+      "ms": [
+        "Unrealistic inputs",
+        "Out of memory",
+        "Missing data"
+      ],
+      "cape": [
+        "3am pages",
+        "Expired certs",
+        "Surprise cloud bills"
+      ],
+      "swe": [
+        "Merge conflicts",
+        "Legacy code",
+        "Friday deploys"
+      ],
+      "diux": [
+        "Comic Sans",
+        "‘Make it pop’",
+        "Last-minute changes"
+      ],
+      "onedh": [
+        "Back-to-back meetings",
+        "Approval chains",
+        "Reply-all emails"
+      ],
+      "shared": [
+        "Monday mornings",
+        "Reply-all emails",
+        "Free food",
+        "‘5-minute’ calls",
+        "Low battery",
+        "Unmuted mics",
+        "Aircon too cold",
+        "Durian season",
+        "Pantry snacks",
+        "Low Wi-Fi",
+        "Spam emails",
+        "Meeting overruns",
+        "Forgotten passwords",
+        "Last train home",
+        "Group photos"
+      ]
+    },
+    "resistances": {
+      "ai": [
+        "Hallucinations",
+        "Hype cycles"
+      ],
+      "ms": [
+        "Randomness",
+        "Edge cases"
+      ],
+      "cape": [
+        "Downtime",
+        "Traffic spikes"
+      ],
+      "swe": [
+        "Bugs (mostly)",
+        "Code smells"
+      ],
+      "diux": [
+        "Ugly fonts",
+        "Clutter"
+      ],
+      "onedh": [
+        "Chaos",
+        "Org charts"
+      ],
+      "shared": [
+        "Long meetings",
+        "Scope creep",
+        "Spicy food",
+        "Post-lunch sleepiness",
+        "Office gossip",
+        "Calorie counting",
+        "Monday blues",
+        "Traffic jams",
+        "Overtime",
+        "Cold coffee",
+        "Group chats",
+        "Free buffets",
+        "Fire drills"
+      ]
+    },
+    "retreats": [
+      "2 kopi breaks",
+      "1 teh peng",
+      "A long lunch",
+      "Leaving at 6pm sharp",
+      "One more coffee",
+      "A power nap",
+      "A snack run",
+      "Bubble tea",
+      "Two lift rides",
+      "A teh tarik break",
+      "A ten-minute walk",
+      "A desk nap",
+      "One more slice of cake",
+      "Leaving on time"
+    ],
+    "stages": [
+      "INTERN",
+      "BASIC",
+      "SENIOR",
+      "LEAD",
+      "PRINCIPAL",
+      "DIRECTOR"
+    ],
+    "fortunes": {
+      "ai": [
+        "May your models never hallucinate.",
+        "May your GPUs always be free.",
+        "May every prompt work the first time."
+      ],
+      "ms": [
+        "May every simulation converge.",
+        "May reality match your model.",
+        "May your runs finish before lunch."
+      ],
+      "cape": [
+        "May your pager stay silent.",
+        "May every deploy be green.",
+        "May your cloud bill shrink."
+      ],
+      "swe": [
+        "May your PRs merge on the first try.",
+        "May your bugs fix themselves.",
+        "May your builds never break."
+      ],
+      "diux": [
+        "May stakeholders love the first draft.",
+        "May every pixel align.",
+        "May users find every button."
+      ],
+      "onedh": [
+        "May the whole hub prosper together.",
+        "One DH, many blessings.",
+        "May every meeting end early."
+      ],
+      "shared": [
+        "May your inbox stay at zero.",
+        "Good health, good wealth, good Wi-Fi.",
+        "May every lucky draw call your name.",
+        "Prosperity in every sprint.",
+        "May your kopi always be hot."
+      ]
+    },
+    "luckyNumbers": [
+      88,
+      168,
+      388,
+      688,
+      888,
+      1688,
+      8888
+    ]
+  },
+  "packs": {
+    "seriesLine": "SERIES 01 · ONE DH, ONE TEAM",
+    "series": {
+      "onedh": {
+        "tag": "6 TO COLLECT"
+      },
+      "ai": {
+        "tag": "FEATURING AI CORE"
+      },
+      "cape": {
+        "tag": "FEATURING CLOUDRUNNER"
+      },
+      "ms": {
+        "tag": "FEATURING SIM STRATEGIST"
+      },
+      "swe": {
+        "tag": "FEATURING CODE SMITH"
+      },
+      "diux": {
+        "tag": "FEATURING UX VISIONARY"
+      }
+    }
+  }
+}

@@ -1,7 +1,9 @@
 # secrets
 ORGANISER-KEY.txt
 .dev.vars
-# internal artwork (kept out of the public repo; add your own to public/photobooth/)
+# event artwork is internal: kept out of the public repo (add your own to events/<id>/assets/)
+public/photobooth/events/*/assets/*
+!public/photobooth/events/*/assets/README.md
 public/photobooth/card-back.webp
 public/photobooth/pack-*.webp
 # tooling

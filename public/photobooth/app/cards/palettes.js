@@ -1,0 +1,19 @@
+// Card designs. layout "full" = photo fills the card (full art); "classic" = photo window.
+export const GOLD   = ["#fff1b0", "#d9a93c", "#fff7d6", "#b8862a", "#f5d77a"];
+export const YELLOW = ["#ffe766", "#f4c800", "#fff3a8", "#e0ae00", "#ffdc3a"];
+export const SILVER = ["#f7f9fb", "#b5bcc4", "#ffffff", "#8c949d", "#e2e6ea"];
+export const RED    = ["#ef4b45", "#b3121b", "#ff7a68", "#8a0b12", "#d72a2a"];
+export const NAVY   = ["#3b5bb0", "#101a3a", "#5a7fd6", "#0a1230", "#22346a"];
+export const BROWN  = ["#c08a52", "#7a4a22", "#d9a46c", "#5e3818", "#9a6534"];
+export const CREAM  = ["#fff6e4", "#e9cf9f", "#fffbf2", "#d4b27c", "#f5e2bf"];
+export const CYAN   = ["#b5f1ff", "#2fb4e0", "#e6fbff", "#1a86b8", "#7fe0ff"];
+export const BLACK  = ["#4a4650", "#141217", "#5f5a66", "#0b0a0d", "#2c2930"];
+export const ICE = ["#f4f9ff", "#b9d3f0", "#ffffff", "#9fb8e0", "#e6dcff"];
+export const JADE = ["#9fe0c4", "#2f8f6e", "#c9f2df", "#1d6b52", "#6cc7a0"];
+export const ROSE = ["#ffd9d2", "#c9806f", "#ffeee9", "#9a5a4c", "#e8a898"];
+export const AMETHYST = ["#efe2ff", "#8e6cc9", "#f8f2ff", "#6a4aa0", "#c3a8ef"];
+export const MAGENTA = ["#ffc2ef", "#d0329e", "#ffe6f8", "#9c1474", "#ff7ad2"];
+export const LIME = ["#e4ffb0", "#7cc91c", "#f4ffd9", "#4e8f0a", "#b6f23a"];
+export const PORCELAIN = ["#eef3ff", "#3a5fb0", "#ffffff", "#24407e", "#9db4e8"];
+export const BLUEBAND = ["#9fe6ff", "#2fb4e0", "#d6f6ff", "#1a86b8", "#5fd0f5"];
+export const PINKBAND = ["#ffb3d6", "#ff4f9a", "#ffd9ea", "#d02a75", "#ff7ab5"];

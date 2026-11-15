@@ -1,0 +1,109 @@
+/* booth.css: the card booth: camera, live card, editor, gallery, foldable layouts */
+/* Camera */
+.cam { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: #0d0a10; border-radius: 10px; overflow: hidden; display: grid; place-items: center; }
+.cam video { width: 100%; height: 100%; object-fit: cover; }
+.cam video.mirror { transform: scaleX(-1); }
+.cam .msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #d8cfe0; padding: 20px; font-size: 14px; }
+.cam .count { position: absolute; inset: 0; display: grid; place-items: center; font: 800 140px/1 var(--font-display); color: #fff; text-shadow: 0 6px 30px rgba(0,0,0,.5); pointer-events: none; }
+.cam .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.cam .flash.go { animation: flash .5s ease-out; }
+.cam .guide { position: absolute; inset: 9% 12%; border: 2px dashed rgba(255,255,255,.35); border-radius: 8px; pointer-events: none; }
+@keyframes flash { from { opacity: .95; } to { opacity: 0; } }
+.cam-controls { display: grid; gap: 10px; margin-top: 12px; }
+.small { font-size: 12px; color: var(--muted); }
+label.field { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+label.field input, label.field select, label.field textarea { font-weight: 400; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+label.field textarea { resize: vertical; min-height: 54px; }
+label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+
+/* Phone camera buttons */
+.phone-cam { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.phone-cam .btn.big { padding: 18px; font-size: 18px; }
+.webcam { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.webcam summary { cursor: pointer; font-weight: 600; color: var(--muted); margin-bottom: 10px; }
+@media (pointer: coarse) { .webcam { display: none; } }
+
+
+/* Card stage */
+.stage { display: grid; gap: 12px; }
+@media (min-width: 721px) { .stage { position: sticky; top: 16px; } }
+@media (max-width: 720px) {
+  header.top h1 { font-size: 24px; }
+  .stage .btn { padding: 14px; font-size: 16px; }
+  .gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+.card-wrap { perspective: 1200px; display: grid; place-items: center; padding: 6px; }
+.card-tilt { position: relative; width: 100%; max-width: min(400px, calc((100vh - 40px) * .714)); max-width: min(400px, calc((100svh - 40px) * .714)); aspect-ratio: 750 / 1050; transition: transform .25s ease; transform-style: preserve-3d; border-radius: 4.5%/3.2%; }
+.card-tilt canvas { width: 100%; height: 100%; display: block; border-radius: 4.5%/3.2%; box-shadow: 0 18px 40px rgba(30, 10, 40, .28); touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
+.card-tilt.pan canvas { touch-action: none; cursor: grab; outline: 3px dashed var(--accent); outline-offset: 4px; }
+.card-tilt.pan canvas:active { cursor: grabbing; }
+.design-nav { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: center; gap: 8px; }
+.design-nav button { height: 48px; font-size: 26px; line-height: 1; padding: 0; }
+.design-name { text-align: center; display: grid; gap: 6px; justify-items: center; }
+.design-name b { font-family: var(--font-display); font-size: 17px; }
+.dots { display: flex; gap: 6px; }
+.swatches { display: grid; grid-template-columns: repeat(10, 30px); gap: 8px; justify-content: center; margin: 4px auto 0; }
+@media (max-width: 420px) { .swatches { grid-template-columns: repeat(5, 36px); gap: 10px 14px; } }
+.swatches button { width: 100%; aspect-ratio: 1; border-radius: 50%; padding: 0; cursor: pointer; background: var(--sw);
+  border: 2px solid rgba(255,255,255,.75); box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.3); transition: transform .15s; }
+.swatches button[aria-checked="true"] { box-shadow: 0 0 0 3px var(--accent), 0 2px 8px rgba(0,0,0,.4); transform: scale(1.12); }
+.dots { font-size: 13px; color: var(--muted, #9a948a); font-weight: 600; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--accent); }
+.btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.card-tilt .shine { position: absolute; inset: 0; border-radius: 4.5%/3.2%; pointer-events: none; mix-blend-mode: color-dodge; opacity: 0; transition: opacity .3s; background: linear-gradient(115deg, transparent 20%, rgba(255,120,200,.35) 36%, rgba(120,220,255,.35) 50%, rgba(255,240,140,.35) 64%, transparent 80%); background-size: 250% 250%; }
+.card-tilt.holo:hover .shine { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .card-tilt { transition: none; } }
+.hint { text-align: center; font-size: 12px; color: var(--muted); }
+
+/* Editor */
+.editor details { border-top: 1px solid var(--line); padding-block: 10px; }
+.editor details:first-of-type { border-top: 0; padding-top: 0; }
+.editor summary { cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.editor summary::after { content: "+"; color: var(--muted); font-size: 18px; }
+.editor details[open] summary::after { content: "–"; }
+.editor .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.editor .grid .full { grid-column: 1 / -1; }
+.types { display: flex; flex-wrap: wrap; gap: 6px; }
+.types button { border: 2px solid transparent; border-radius: 999px; padding: 4px 10px 4px 4px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; background: var(--bg); font-size: 13px; font-weight: 600; }
+.types button[aria-pressed="true"] { border-color: var(--ink); }
+.types canvas { width: 22px; height: 22px; }
+.attack { border: 1px dashed var(--line); border-radius: 10px; padding: 10px; display: grid; grid-template-columns: 70px minmax(0, 1fr) 80px; gap: 8px; }
+.attack .full { grid-column: 1 / -1; }
+.attack-title { font-size: 12px; font-weight: 700; color: var(--muted); grid-column: 1 / -1; display: flex; justify-content: space-between; }
+
+/* Gallery */
+.gallery-wrap { max-width: 1500px; margin: 20px auto 0; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 12px; }
+.gallery figure { margin: 0; position: relative; }
+.gallery img { width: 100%; display: block; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.gallery figure .acts { display: flex; gap: 4px; margin-top: 6px; }
+.gallery figure .acts button { flex: 1; padding: 4px; font-size: 11px; border-radius: 6px; }
+.gallery figure.selected img { outline: 3px solid var(--accent); outline-offset: 2px; }
+.empty { color: var(--muted); font-size: 13px; padding: 18px; border: 1px dashed var(--line); border-radius: 10px; text-align: center; }
+
+
+/* Booth mode: guests only see camera, card, name and big buttons */
+/* Staff view (default): one path only. Organiser settings live at #admin */
+body.booth .advanced, body.booth .editor, body.booth .webcam, body.booth .gallery-wrap { display: none !important; }
+body.booth .app { grid-template-columns: minmax(0, 420px) minmax(300px, 460px); justify-content: center; }
+@media (max-width: 720px) { body.booth .app { grid-template-columns: 1fr; } }
+body.booth .stage .btn.big { padding: 16px; font-size: 18px; }
+.admin-badge { background: var(--gold); color: #1a1220; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; }
+a.btn { text-decoration: none; }
+
+.btn.post { background: var(--gold); color: #1a1220; border-color: var(--gold); }
+/* Dual-screen phones and foldables spanned across the hinge: one column per screen, nothing on the fold */
+@media (horizontal-viewport-segments: 2) {
+  body.booth { padding-left: 0; padding-right: 0; }
+  body.booth header.top { padding-inline: 16px; }
+  body.booth .app { max-width: none; grid-template-columns: env(viewport-segment-width 0 0, 1fr) env(viewport-segment-width 1 0, 1fr);
+    column-gap: calc(env(viewport-segment-left 1 0, 0px) - env(viewport-segment-right 0 0, 0px)); }
+  body.booth .app > * { margin-inline: 16px; }
+  body.booth .stage { position: static; }
+}
+/* Folded "tent / laptop" posture (top and bottom screens): keep the card on the top screen */
+@media (vertical-viewport-segments: 2) {
+  body.booth .card-tilt { max-width: min(400px, calc((env(viewport-segment-height 0 0, 50vh) - 40px) * .714)); }
+}

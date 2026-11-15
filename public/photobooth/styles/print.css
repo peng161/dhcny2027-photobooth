@@ -1,0 +1,12 @@
+/* print.css: printing single cards and 9-up sheets */
+#print-root { display: none; }
+@media print {
+  body.wall-mode #print-root { display: block !important; }
+  body { padding: 0 !important; background: #fff !important; }
+  body > *:not(#print-root) { display: none !important; }
+  #print-root { display: block; }
+  .p-page { display: flex; align-items: center; justify-content: center; page-break-after: always; break-after: page; overflow: hidden; }
+  .p-page:last-child { page-break-after: auto; break-after: auto; }
+  .p-sheet { display: grid; grid-template-columns: repeat(3, 2.5in); grid-auto-rows: 3.5in; gap: 0; justify-content: center; align-content: start; }
+  .p-sheet img { width: 2.5in; height: 3.5in; outline: 0.5pt dashed #bbb; outline-offset: -0.25pt; }
+}
