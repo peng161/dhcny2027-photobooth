@@ -194,6 +194,13 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
   background: radial-gradient(ellipse at 50% 45%, #5a1220 0%, #2a0a12 45%, #0c0609 100%); color: #fbe7bf; }
 .show::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(245,200,76,.05) 0deg 6deg, transparent 6deg 15deg); }
+.wall-qr { position: absolute; right: max(2vw, env(safe-area-inset-right, 0px)); bottom: 21vh; z-index: 3; display: grid; justify-items: center; gap: 6px;
+  background: rgba(12,6,10,.72); border: 1px solid rgba(245,200,76,.55); border-radius: 14px; padding: 10px 10px 8px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.wall-qr img { width: clamp(80px, 13vh, 150px); height: auto; border-radius: 6px; background: #fff; padding: 6px; image-rendering: pixelated; }
+.wall-qr span { color: #ffe39a; font: 700 clamp(11px, 1.6vh, 16px)/1.15 var(--font-display); text-align: center; }
+#wall.show-mode .wall-head { transition: opacity .5s; }
+#wall.show-mode.idle .wall-head { opacity: 0; pointer-events: none; }
+#wall.show-mode.idle { cursor: none; }
 .bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .show:not([data-bg="classic"])::after { display: none; }
 .show[data-bg="arena"] .sparks span { background: #9be7ff; box-shadow: 0 0 8px 2px rgba(140,220,255,.7); }
@@ -335,6 +342,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .btn.post { background: var(--gold); color: #1a1220; border-color: var(--gold); }
 #print-root { display: none; }
 @media print {
+  body.wall-mode #print-root { display: block !important; }
   body { padding: 0 !important; background: #fff !important; }
   body > *:not(#print-root) { display: none !important; }
   #print-root { display: block; }
@@ -550,6 +558,8 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
       <button class="btn" id="modeShow" type="button" aria-pressed="true">✨ Showcase</button>
       <button class="btn" id="modeGrid" type="button" aria-pressed="false">▦ Grid</button>
     </div>
+    <button class="btn" id="dlAllBtn" type="button" hidden>⬇ Download all</button>
+    <button class="btn" id="printAllBtn" type="button" hidden>🖨 Print all</button>
     <button class="btn" id="bgBtn" type="button">🎨 Background</button>
     <button class="btn" id="fullBtn" type="button">⛶ Full screen</button>
     <a class="btn primary" href="#">📷 Make your card</a>
@@ -573,6 +583,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
       <div class="empty show-empty" id="showEmpty" hidden>No cards yet. Make yours and tap <b>📌 Post to Card Wall</b>, then watch it appear here.</div>
     </div>
     <div class="mq"><div class="track rev" id="mqBot"></div></div>
+    <div class="wall-qr" id="wallQr" hidden><img id="qrImg" alt="QR code to make your card"><span>Scan to make<br>your card</span></div>
     <div class="pack-stage" id="packStage" hidden>
       <div class="pack-burst" id="packBurst"></div>
       <div class="pack" id="pack">
@@ -603,6 +614,8 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 <div id="print-root"></div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 (() => {
 "use strict";
@@ -792,6 +805,68 @@ const RESIST = {
 };
 const RETREAT = ["2 kopi breaks", "1 teh peng", "A long lunch", "Leaving at 6pm sharp", "One more coffee", "A power nap", "A snack run", "Bubble tea", "Two lift rides"];
 const STAGES = ["INTERN", "BASIC", "SENIOR", "LEAD", "PRINCIPAL", "DIRECTOR"];
+/* --- more moves, abilities and stats to shuffle through --- */
+TEAM_MOVES.ai.push(
+  ["Vibe Coding", "70", "Describe the move out loud. It mostly works."],
+  ["Retrain", "", "Shuffle your hand into your deck and draw 7. Accuracy +2%."],
+  ["Rate Limited", "40", "Your opponent may only use one move per minute."],
+  ["Synthetic Data", "60", "Copy any card on the table. The copy is slightly blurry."],
+  ["Chain Of Thought", "30×", "Explain your reasoning. Does 30 damage for each step."],
+  ["Jailbreak", "110", "Ignore all previous rules. Then do 110 damage."]);
+TEAM_MOVES.ms.push(
+  ["Twin Swap", "50", "Swap places with your digital twin. Nobody can tell."],
+  ["Stochastic Strike", "10×", "Roll a die 10 times. Report the mean with confidence."],
+  ["Converge Or Bust", "150", "Flip a coin. If tails, run it again next turn."],
+  ["Scenario Planning", "40", "Look at your opponent's next 3 possible moves. Prepare for all of them."],
+  ["Physics Engine", "80", "Your opponent's guest is now affected by gravity. Mostly."],
+  ["Overnight Batch Job", "200", "This move resolves tomorrow morning."]);
+TEAM_MOVES.cape.push(
+  ["Scale To Zero", "", "Your opponent's guest sleeps until someone sends a request."],
+  ["Chaos Monkey", "90", "Knock out a random guest. Everyone learns something."],
+  ["Hotfix In Prod", "120", "Does 120 damage. Do not tell anyone."],
+  ["Load Balancer", "30×", "Spread 30 damage across each of your opponent's guests."],
+  ["Certificate Expired", "70", "Your opponent's guest can't connect until next turn."],
+  ["Blue-Green Deploy", "60", "Swap your active guest for a fresh copy. Nobody notices."]);
+TEAM_MOVES.swe.push(
+  ["Git Blame", "60", "Find out who wrote your opponent's last move. Stare at them."],
+  ["Stack Trace", "20×", "Does 20 damage for each line nobody reads."],
+  ["Code Freeze", "", "Your opponent can't change anything until after the event."],
+  ["Pending Review", "90", "This move lands after 2 approvals."],
+  ["It Compiles!", "100", "Celebrate. Ignore the 47 warnings."],
+  ["Tabs Vs Spaces", "50", "Both guests start arguing. Nobody attacks next turn."]);
+TEAM_MOVES.diux.push(
+  ["Undo Undo Undo", "", "Return the board to how it looked 10 minutes ago."],
+  ["Kerning Crisis", "70", "Your opponent's guest can't stop noticing the gaps."],
+  ["Wireframe Slam", "80", "Low fidelity. High damage."],
+  ["A/B Test", "50×", "Flip a coin. Heads: 50 damage. Tails: test again."],
+  ["Accessibility Check", "40", "Now everyone can read the cards. Heal 20."],
+  ["Brand Refresh", "110", "Same guest, new colours. Your opponent is Confused."]);
+TEAM_MOVES.onedh.push(
+  ["All Hands On Deck", "20×", "Does 20 damage for each person in the room."],
+  ["Lunch And Learn", "60", "Draw 2 cards. Snacks provided."],
+  ["Mentorship", "", "Give one of your guests 30 HP and a pep talk."],
+  ["Hackathon", "150", "Only usable after midnight. Pizza required."],
+  ["Town Hall Q&A", "70", "Your opponent must answer one question honestly."]);
+SHARED_MOVES.push(
+  ["Yusheng Toss", "88", "Toss higher for more luck. Each of your guests heals 20."],
+  ["Ang Bao Ambush", "66", "Your opponent opens an empty red packet. Shocking."],
+  ["Nian Beast Roar", "130", "Scare away bad luck. Your opponent discards a card."],
+  ["Firecracker Chain", "20×", "Does 20 damage for each pop. Very loud."],
+  ["Spring Couplets", "40", "Stick a blessing on your bench. Heal 40."],
+  ["Kueh Lapis Layers", "50", "Add one layer of defence each turn. Delicious."],
+  ["Prosperity Shout", "168", "Only works if everyone shouts “Huat!”"],
+  ["Mahjong Master", "100", "Flip 3 coins. If all heads, you win the game. Probably."]);
+ABILITIES.ai.push(["Multimodal", "This guest attacks with text, images and vibes."], ["Zero-Shot", "This guest's first move each game always works."]);
+ABILITIES.ms.push(["Monte Carlo Mind", "Flip coins twice and keep the better result."], ["High Fidelity", "This guest's moves are accurate to 4 decimal places."]);
+ABILITIES.cape.push(["Auto-Scaling", "This guest gains 10 HP for each new visitor."], ["Always On-Call", "This guest responds to any attack within 5 minutes."]);
+ABILITIES.swe.push(["Clean Code", "Well-named moves cost 1 less energy."], ["10x Mindset", "Once per game, do 10 times the damage. Then nap."]);
+ABILITIES.diux.push(["Design Thinking", "Before attacking, empathise with your opponent."], ["Pixel Shield", "Prevent 10 damage for each pixel out of place."]);
+ABILITIES.onedh.push(["Hub Spirit", "Each guest on your bench heals 10 every turn."], ["Stronger Together", "Does 20 more damage for each cluster on your bench."]);
+ABILITIES.shared.push(["Lucky Red", "While wearing red, all your coin flips are heads."], ["Reunion", "Bring a benched guest back with full HP."], ["Huat Mode", "This guest's moves do double damage during CNY."]);
+WEAK.shared.push("Spam emails", "Meeting overruns", "Forgotten passwords", "Last train home", "Group photos");
+RESIST.shared.push("Overtime", "Cold coffee", "Group chats", "Free buffets", "Fire drills");
+RETREAT.push("A teh tarik break", "A ten-minute walk", "A desk nap", "One more slice of cake", "Leaving on time");
+FLAVOR.shared.push("Has never missed a lucky draw. Has never won one either.", "Knows where every power socket in the building is.", "Will trade any card for one more pineapple tart.");
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const shuffled = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
@@ -2173,8 +2248,8 @@ function bindForm() {
   ["abOn", "abName", "abText"].forEach(id => $(id).addEventListener("input", abSync));
   $("abOn").addEventListener("change", abSync);
   $("f-frame").addEventListener("change", (e) => setDesign(e.target.value));
-  $("teamSel").addEventListener("change", (e) => { card.type = e.target.value; shuffleCard(); });
-  $("boothName").addEventListener("input", (e) => { card.name = e.target.value; $("f-name").value = card.name; render(); });
+  $("teamSel").addEventListener("change", (e) => { card.type = e.target.value; shuffleCard(); resetPostBtn(); });
+  $("boothName").addEventListener("input", (e) => { card.name = e.target.value; $("f-name").value = card.name; render(); resetPostBtn(); });
 
   const ev = { set: "e-set", banner: "e-banner", num: "e-num", total: "e-total" };
   Object.entries(ev).forEach(([k, id]) => {
@@ -2277,6 +2352,7 @@ async function snap() {
 function setPhoto(img) {
   photo.img = img; photo.zoom = 1; photo.ox = 0; photo.oy = 0; photo.userMoved = false; $("zoom").value = 1;
   $("adjustRow").hidden = false;
+  setTimeout(() => typeof resetPostBtn === "function" && resetPostBtn(), 0);
   if (document.body.classList.contains("booth")) event.num = 1 + Math.floor(Math.random() * (event.total || 200));
   if (event.autoshuffle) shuffleCard(); else render();
   if (matchMedia("(max-width: 720px)").matches) $("tilt").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2490,16 +2566,25 @@ async function api(method, query = "", body) {
     return { ok: r.ok, status: r.status, data };
   } catch { return { ok: false, status: 0, data: { error: "No connection. Check your Wi-Fi or data and try again." } }; }
 }
+let postedSig = "";
+const cardSig = () => [photo.img?.src?.length, photo.img?.src?.slice(-24), card.name, card.type, card.frame].join("|");
+function resetPostBtn() { const b = $("postBtn"); if (b && postedSig && postedSig !== cardSig()) { postedSig = ""; b.disabled = false; b.textContent = "📌 Post to Card Wall"; } }
 async function postToWall() {
   if (!photo.img) { toast("Take a photo first"); return; }
+  if (!card.name.trim()) { toast("Type your name first, then post"); $("boothName").focus(); return; }
+  if (postedSig === cardSig()) { toast("This card is already on the wall"); return; }
   if (!(await ensureCode())) return;
   const btn = $("postBtn"); btn.disabled = true; btn.textContent = "Posting…";
   const image = exportCanvas(1).toDataURL("image/jpeg", 0.85);
   let r = await api("POST", "", { image, cluster: card.type });
   if (r.status === 401) { ls.set("dh-pass", ""); if (await askCode("That code didn't work. Check the code shown at the booth.")) r = await api("POST", "", { image, cluster: card.type }); }
-  btn.disabled = false; btn.textContent = "📌 Post to Card Wall";
-  if (r.ok) toast("Posted to the Card Wall 🎉");
-  else if (r.status !== 401) toast(r.data.error || "Couldn't post. Try again.");
+  if (r.ok) {
+    postedSig = cardSig(); btn.textContent = "✓ Posted to the wall";
+    toast("Posted! 🎉 Watch for it in the next pack on the Card Wall");
+  } else {
+    btn.disabled = false; btn.textContent = "📌 Post to Card Wall";
+    if (r.status !== 401) toast(r.data.error || "Couldn't post. Try again.");
+  }
 }
 
 /* --- demo cards, so the wall can be previewed before anyone posts --- */
@@ -3170,7 +3255,49 @@ function makeSparks() {
     box.append(s);
   }
 }
+let wakeLock = null, idleTimer = 0;
+async function keepAwake() { try { if (!wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch {} }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("wall").hidden) keepAwake(); });
+function wallActive() { $("wall").classList.remove("idle"); clearTimeout(idleTimer); idleTimer = setTimeout(() => $("wall").classList.add("idle"), 3000); }
+["mousemove", "pointerdown", "keydown", "touchstart"].forEach(ev => addEventListener(ev, () => { if (!$("wall").hidden) wallActive(); }, { passive: true }));
+function makeWallQr() {
+  const base = `${location.origin}${location.pathname}`;
+  const url = getPass() && !DEMO ? `${base}?code=${encodeURIComponent(getPass())}` : base;
+  try { const q = qrcode(0, "M"); q.addData(url); q.make(); $("qrImg").src = q.createDataURL(8, 2); $("wallQr").hidden = false; } catch { $("wallQr").hidden = true; }
+}
+/* Organiser tools: download every card as a ZIP, or print them 9 to a page */
+async function downloadAllCards() {
+  const ids = wallList.slice().reverse(), btn = $("dlAllBtn");
+  if (!ids.length) { toast("No cards on the wall yet"); return; }
+  if (typeof JSZip === "undefined") { toast("Download isn't available. Check the connection and reload."); return; }
+  btn.disabled = true;
+  const zip = new JSZip();
+  let done = 0, failed = 0;
+  for (const id of ids) {
+    btn.textContent = `Preparing ${done + failed + 1} / ${ids.length}…`;
+    try { const r = await fetch(cardSrc(id)); if (!r.ok) throw 0; zip.file(`onedh-card-${String(done + 1).padStart(3, "0")}.jpg`, await r.blob()); done++; } catch { failed++; }
+  }
+  btn.textContent = "Zipping…";
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(blob);
+  download(url, `onedh-cards-${new Date().toISOString().slice(0, 10)}.zip`);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  btn.disabled = false; btn.textContent = "⬇ Download all";
+  toast(failed ? `Downloaded ${done} cards (${failed} couldn't be fetched)` : `Downloaded all ${done} cards`);
+}
+function printAllCards() {
+  const ids = wallList.slice().reverse();
+  if (!ids.length) { toast("No cards on the wall yet"); return; }
+  setPage(`@page { size: ${$("paper").value === "A4" ? "A4" : "letter"}; margin: 0.25in; }`);
+  const pages = [];
+  for (let i = 0; i < ids.length; i += 9) pages.push(ids.slice(i, i + 9));
+  $("print-root").innerHTML = pages.map(p => `<div class="p-page"><div class="p-sheet">${p.map(id => `<img src="${cardSrc(id)}">`).join("")}</div></div>`).join("");
+  toast(`Preparing ${ids.length} cards on ${pages.length} page${pages.length === 1 ? "" : "s"}…`);
+  doPrint();
+}
 async function openWall() {
+  { const org = !!getAdminKey() && !DEMO; $("dlAllBtn").hidden = !org; $("printAllBtn").hidden = !org; }
+  keepAwake(); wallActive(); setTimeout(makeWallQr, 0);
   setTimeout(() => setWallBg(wallBg), 0);
   new Image().src = "card-back.webp";
   setTimeout(() => PACK_ORDER.forEach(k => getPackArt(k)), 1500);
@@ -3201,6 +3328,8 @@ function closeWall() { cancelAnimationFrame(bgRaf); $("wall").hidden = true; cle
 $("postBtn").addEventListener("click", postToWall);
 $("wallViewClose").addEventListener("click", () => { $("wallView").hidden = true; });
 $("modeShow").addEventListener("click", () => setWallMode("show"));
+$("dlAllBtn").addEventListener("click", downloadAllCards);
+$("printAllBtn").addEventListener("click", printAllCards);
 $("bgBtn").addEventListener("click", () => { const keys = Object.keys(WALL_BGS); setWallBg(keys[(keys.indexOf(wallBg) + 1) % keys.length]); });
 $("modeGrid").addEventListener("click", () => setWallMode("grid"));
 $("fullBtn").addEventListener("click", () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); } catch {} });
@@ -3253,6 +3382,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- Boot ---------- */
+{ const qp = new URLSearchParams(location.search), code = qp.get("code");
+  if (code) { ls.set("dh-pass", code.trim()); qp.delete("code"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
 buildTypePicker(); bindForm(); fillForm(); saveEvent(); render();
 (document.fonts?.ready || Promise.resolve()).then(() => {
   Promise.all([`italic 900 60px "Playfair Display"`, `800 40px "Playfair Display"`, `italic 700 24px "Playfair Display"`, `800 40px "Barlow Condensed"`, `italic 800 20px "Barlow Condensed"`, `800 40px Rubik`, `700 30px Rubik`, `italic 400 16px Rubik`, `500 16px Rubik`, `400 16px Rubik`].map(f => document.fonts.load(f).catch(() => {}))).then(render);
