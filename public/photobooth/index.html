@@ -199,11 +199,21 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .wall-qr img { width: clamp(80px, 13vh, 150px); height: auto; border-radius: 6px; background: #fff; padding: 6px; image-rendering: pixelated; }
 .wall-qr span { color: #ffe39a; font: 700 clamp(11px, 1.6vh, 16px)/1.15 var(--font-display); text-align: center; }
 #wall.show-mode .wall-head { transition: opacity .5s; }
-@media (max-width: 600px) {
-  #wall.show-mode .wall-head { gap: 6px; }
-  #wall.show-mode .wall-head h1 { font-size: 20px; }
-  #wall.show-mode .wall-head .btn { padding: 6px 10px; font-size: 12px; }
+/* Phones and small screens: one compact row of icon buttons, and an always-visible "Make your card" button */
+@media (max-width: 700px), (pointer: coarse) and (max-width: 900px) {
+  .wall-head { flex-wrap: nowrap; gap: 6px; }
+  .wall-head h1 { font-size: clamp(16px, 5vw, 22px); white-space: nowrap; }
+  .wall-head #wallCount { display: none; }
+  .wall-head .btn { padding: 7px 10px; font-size: 14px; }
+  .wall-head .lbl { display: none; }
+  #fullBtn { display: none; }
+  .make-card { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 8;
+    padding: 12px 22px !important; font-size: 16px !important; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.55); white-space: nowrap; }
+  #wall.show-mode .show { padding-top: 54px; }
+  .show .mq-bot { padding-bottom: 64px; }
+  #wall:not(.show-mode) .wall-grid { padding-bottom: 80px; }
 }
+@media (pointer: coarse) { #wall.idle .wall-head { opacity: 1 !important; pointer-events: auto !important; } }
 /* fold / unfold: content re-forms smoothly instead of jumping */
 body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .pack-stage { animation: unfold .65s cubic-bezier(.2,.8,.2,1); }
 @keyframes unfold { from { transform: scale(.94); opacity: .35; filter: blur(3px); } to { transform: none; opacity: 1; filter: none; } }
@@ -604,14 +614,14 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
     <span class="small" id="wallCount"></span>
     <div class="spacer"></div>
     <div class="seg" role="group" aria-label="Wall layout">
-      <button class="btn" id="modeShow" type="button" aria-pressed="true">✨ Showcase</button>
-      <button class="btn" id="modeGrid" type="button" aria-pressed="false">▦ Grid</button>
+      <button class="btn" id="modeShow" type="button" aria-pressed="true" aria-label="Showcase">✨<span class="lbl"> Showcase</span></button>
+      <button class="btn" id="modeGrid" type="button" aria-pressed="false" aria-label="Grid">▦<span class="lbl"> Grid</span></button>
     </div>
     <button class="btn" id="dlAllBtn" type="button" hidden>⬇ Download all</button>
     <button class="btn" id="printAllBtn" type="button" hidden>🖨 Print all</button>
     <button class="btn" id="bgBtn" type="button">🎨 Background</button>
     <button class="btn" id="fullBtn" type="button">⛶ Full screen</button>
-    <a class="btn primary" href="#">📷 Make your card</a>
+    <a class="btn primary make-card" href="#">📷 Make your card</a>
   </div>
   <div class="wall-grid" id="wallGrid"></div>
   <div class="empty" id="wallEmpty" hidden>No cards yet. Make yours and tap <b>Post to Card Wall</b>.</div>
@@ -631,7 +641,7 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
       </div>
       <div class="empty show-empty" id="showEmpty" hidden>No cards yet. Make yours and tap <b>📌 Post to Card Wall</b>, then watch it appear here.</div>
     </div>
-    <div class="mq"><div class="track rev" id="mqBot"></div></div>
+    <div class="mq mq-bot"><div class="track rev" id="mqBot"></div></div>
     <div class="wall-qr" id="wallQr" hidden><img id="qrImg" alt="QR code to make your card"><span>Scan to make<br>your card</span></div>
     <div class="pack-stage" id="packStage" hidden>
       <div class="pack-burst" id="packBurst"></div>
@@ -3021,7 +3031,7 @@ if (!WALL_BGS[wallBg]) wallBg = "ink";
 let bgRaf = 0, bgState = null;
 function setWallBg(k) {
   wallBg = k; ls.set("dh-wallbg", k);
-  $("show").dataset.bg = k; $("bgBtn").textContent = `🎨 ${WALL_BGS[k]}`;
+  $("show").dataset.bg = k; $("bgBtn").innerHTML = `🎨<span class="lbl"> ${WALL_BGS[k]}</span>`; $("bgBtn").setAttribute("aria-label", `Background: ${WALL_BGS[k]}`);
   bgState = null; startBg();
 }
 function startBg() {
@@ -3384,7 +3394,7 @@ function makeSparks() {
 let wakeLock = null, idleTimer = 0;
 async function keepAwake() { try { if (!wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; }); } } catch {} }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("wall").hidden) keepAwake(); });
-function wallActive() { $("wall").classList.remove("idle"); clearTimeout(idleTimer); idleTimer = setTimeout(() => $("wall").classList.add("idle"), 3000); }
+function wallActive() { $("wall").classList.remove("idle"); clearTimeout(idleTimer); if (matchMedia("(pointer: fine)").matches) idleTimer = setTimeout(() => $("wall").classList.add("idle"), 3000); }
 ["mousemove", "pointerdown", "keydown", "touchstart"].forEach(ev => addEventListener(ev, () => { if (!$("wall").hidden) wallActive(); }, { passive: true }));
 function makeWallQr() {
   // only the big screen needs a QR: a wide screen driven by a mouse (TV/laptop), or forced with ?tv
@@ -3444,7 +3454,9 @@ async function openWall() {
     let p = 0, k = 12;
     const demoPack = async () => {
       const cl = PACK_ORDER[p % PACK_ORDER.length];
+      const saved = { card: JSON.parse(JSON.stringify(card)), photo: { ...photo }, num: event.num };
       for (let j = 0; j < PACK_SIZE; j++) await makeDemoCard(k++, cl === "onedh" ? null : cl);
+      Object.assign(card, saved.card); Object.assign(photo, saved.photo); event.num = saved.num; fillForm(); render();
       p++;
       await loadWall();
       const waitDone = () => { if (packPlaying) demoTimer = setTimeout(waitDone, 500); else if (p < PACK_ORDER.length) demoTimer = setTimeout(demoPack, 1200); };
@@ -3511,6 +3523,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- Boot ---------- */
+{ const qp = new URLSearchParams(location.search);
+  if (qp.has("fresh")) { try { localStorage.removeItem("dh-seen"); } catch {} qp.delete("fresh"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
 { const qp = new URLSearchParams(location.search), code = qp.get("code");
   if (code) { ls.set("dh-pass", code.trim()); qp.delete("code"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
 buildTypePicker(); bindForm(); fillForm(); saveEvent(); render();
