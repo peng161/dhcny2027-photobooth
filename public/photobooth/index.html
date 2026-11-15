@@ -199,6 +199,21 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .wall-qr img { width: clamp(80px, 13vh, 150px); height: auto; border-radius: 6px; background: #fff; padding: 6px; image-rendering: pixelated; }
 .wall-qr span { color: #ffe39a; font: 700 clamp(11px, 1.6vh, 16px)/1.15 var(--font-display); text-align: center; }
 #wall.show-mode .wall-head { transition: opacity .5s; }
+@media (max-width: 600px) {
+  .wall-qr { display: none !important; }
+  #wall.show-mode .wall-head { gap: 6px; }
+  #wall.show-mode .wall-head h1 { font-size: 20px; }
+  #wall.show-mode .wall-head .btn { padding: 6px 10px; font-size: 12px; }
+}
+/* fold / unfold: content re-forms smoothly instead of jumping */
+body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .pack-stage { animation: unfold .65s cubic-bezier(.2,.8,.2,1); }
+@keyframes unfold { from { transform: scale(.94); opacity: .35; filter: blur(3px); } to { transform: none; opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) { body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .pack-stage { animation: none; } }
+/* wall on a dual-screen / spanned foldable: centre the spotlight and packs on the right screen, away from the hinge */
+@media (horizontal-viewport-segments: 2) {
+  .show-stage, .pack-stage { padding-left: env(viewport-segment-left 1 0, 0px); }
+  .pack-cards { left: env(viewport-segment-left 1 0, 0px); }
+}
 #wall.show-mode.idle .wall-head { opacity: 0; pointer-events: none; }
 #wall.show-mode.idle { cursor: none; }
 .bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
@@ -220,7 +235,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .feat-wrap { transform-style: preserve-3d; }
 .feat-wrap.flip { animation: flipin 1s cubic-bezier(.2,.8,.2,1); }
 @keyframes flipin { from { transform: rotateY(-88deg) scale(.7); opacity: .3; } 55% { opacity: 1; } to { transform: none; } }
-.feat { position: relative; height: 50vh; aspect-ratio: 750 / 1050; transform-style: preserve-3d; animation: sway 9s ease-in-out infinite; }
+.feat { position: relative; height: min(50vh, 118vw); aspect-ratio: 750 / 1050; transform-style: preserve-3d; animation: sway 9s ease-in-out infinite; }
 .feat img { width: 100%; height: 100%; display: block; border-radius: 4.5% / 3.2%; box-shadow: 0 30px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,220,150,.3); cursor: zoom-in; }
 .feat-shine { position: absolute; inset: 0; border-radius: 4.5% / 3.2%; pointer-events: none; mix-blend-mode: color-dodge;
   background: linear-gradient(115deg, transparent 25%, rgba(255,120,200,.35) 40%, rgba(120,220,255,.35) 50%, rgba(255,240,140,.35) 60%, transparent 75%);
@@ -271,8 +286,13 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .pack-burst { position: absolute; width: 10vh; height: 10vh; border-radius: 50%; opacity: 0; background: radial-gradient(circle, #fff6cf, rgba(255,200,90,.6) 40%, rgba(255,200,90,0) 70%); }
 .pack-burst.go { animation: burst 1.1s ease-out; }
 @keyframes burst { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(9); } }
-.pack-cards { position: absolute; inset: 0; perspective: 1600px; }
-.pcard { position: absolute; left: 50%; top: 50%; height: min(40vh, 34vw); aspect-ratio: 750 / 1050; opacity: 0; transform: translate(-50%, -50%) scale(.6);
+.pack-cards { position: absolute; inset: 0; perspective: 1600px;
+  --cardh: min(44vh, 105vw);                                           /* tall enough on a folded cover screen, never wider than the screen */
+  --rowstep: min(calc(var(--cardh) * .714 * .46), 30vw);               /* row spacing follows the card size, so cards never pile up */
+  --rowy: min(30vh, calc(50vh - var(--cardh) * .21 - 10px)); }
+/* revealed cards sit in a row that re-flows live if the phone is folded or unfolded mid-pack */
+.pcard.inrow { transform: translate(-50%, -50%) translateX(calc(var(--off) * var(--rowstep))) translateY(var(--rowy)) scale(.42) !important; }
+.pcard { position: absolute; left: 50%; top: 50%; height: var(--cardh); aspect-ratio: 750 / 1050; opacity: 0; transform: translate(-50%, -50%) scale(.6);
   transition: transform .8s cubic-bezier(.2,.8,.2,1), opacity .6s ease; transform-style: preserve-3d; }
 .pc-inner { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateY(180deg); transition: transform .6s cubic-bezier(.2,.85,.25,1); }
 .pcard.flipped .pc-inner { transform: rotateY(0deg); }
@@ -2937,7 +2957,6 @@ async function openPack(ids) {
   els.forEach((el, i) => { el.style.transitionDuration = ""; el.style.transform = `translate(-50%, -50%) translate(${i * 4}px, ${-i * 4}px) rotate(${(i % 2 ? 1 : -1) * i * 1.4}deg) scale(.95)`; });
   await sleep(1000 * T);
   // 4. reveal one card at a time, then tuck it into the row below
-  const rowStep = Math.min(innerHeight * 0.15, innerWidth * 0.18), rowY = innerHeight * 0.3;
   for (let i = 0; i < n; i++) {
     const el = els[i], last = i === n - 1 && n > 1;
     el.style.zIndex = "300";
@@ -2953,16 +2972,16 @@ async function openPack(ids) {
     if (last) setTimeout(() => { flash(false); cap.textContent = rar[i] >= 4 ? "👑 Crown pull!" : "✨ Rare pull!"; stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }, 780);
     else if (rar[i] >= 3) setTimeout(() => { flash(false); glitterBurst(30); }, 420);
     await sleep((last ? 3400 : 2100) * T);
-    const off = i - (n - 1) / 2;
     el.style.zIndex = String(10 + i);
-    el.style.transform = `translate(-50%, -50%) translateX(${off * rowStep}px) translateY(${rowY}px) scale(.42)`;
+    el.style.setProperty("--off", String(i - (n - 1) / 2));
+    el.classList.add("inrow");
     await sleep(550 * T);
   }
   cap.textContent = "Welcome to the wall! 🎉";
   await sleep(2000 * T);
   cap.textContent = "";
   // 5. into the card rivers
-  els.forEach((el, i) => { el.style.transitionDelay = `${i * 80}ms`; el.style.transform = "translate(-50%, -50%) translateY(48vh) scale(.25)"; el.style.opacity = "0"; });
+  els.forEach((el, i) => { el.classList.remove("inrow"); el.style.transitionDelay = `${i * 80}ms`; el.style.transform = "translate(-50%, -50%) translateY(48vh) scale(.25)"; el.style.opacity = "0"; });
   await sleep(1200);
   stage.hidden = true; cardsBox.innerHTML = "";
   ids.forEach(id => revealed.add(id));
@@ -3213,6 +3232,17 @@ function bgGoat(g, w, h, dt, t) {
   });
 }
 addEventListener("resize", () => { bgState = null; });
+{ // a big jump in screen width is a fold or unfold: replay a short re-form animation
+  let lastW = innerWidth, t = 0;
+  addEventListener("resize", () => {
+    const w = innerWidth; if (!lastW || !w) { lastW = w; return; }
+    const jump = Math.abs(w - lastW) / lastW > 0.3; lastW = w;
+    if (!jump || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.body.classList.remove("unfold"); void document.body.offsetWidth; document.body.classList.add("unfold");
+    clearTimeout(t); t = setTimeout(() => document.body.classList.remove("unfold"), 700);
+    if (!$("wall").hidden) { trackSig = ""; refreshShow(false); }   // rebuild the card rivers for the new width
+  });
+}
 
 /* --- showcase --- */
 function fillTrack(el, ids) {
