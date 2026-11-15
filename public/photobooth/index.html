@@ -165,7 +165,7 @@ body.booth .stage .btn.big { padding: 16px; font-size: 18px; }
 a.btn { text-decoration: none; }
 
 /* Card Wall */
-body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: none !important; }
+body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) { display: none !important; }
 #wall { max-width: 1600px; margin: 0 auto; }
 .wall-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 18px; }
 .wall-head h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
@@ -305,13 +305,25 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
 .mpack.done { transform: translateY(16px) scale(.86); opacity: .25; }
 @keyframes mp-in { from { transform: translateY(-40vh) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .pack-cards .mcard { position: absolute; z-index: 5; border-radius: 4.5% / 3.2%; box-shadow: 0 10px 24px rgba(0,0,0,.5); opacity: 0;
-  animation: mfly var(--d) cubic-bezier(.2,.8,.2,1) forwards; }
-@keyframes mfly {
+  animation: mfan var(--d) cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes mfan {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
-  22% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--r)) scale(1); }
-  62% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) - 10px)) rotate(var(--r)) scale(1); }
-  100% { opacity: 0; transform: translate(calc(-50% + var(--ex)), calc(-50% + var(--ey))) rotate(0deg) scale(.35); } }
-@media (prefers-reduced-motion: reduce) { .mpack, .pack-cards .mcard { animation-duration: .01s !important; } }
+  40% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--r)) scale(1); }
+  100% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) - 10px)) rotate(var(--r)) scale(1); } }
+/* cards flying between the pack, the rivers and the centre */
+.flyer { position: fixed; z-index: 9000; aspect-ratio: 750 / 1050; border-radius: 4.5% / 3.2%; pointer-events: none; will-change: transform, opacity;
+  box-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(255,220,150,.35); }
+.track img.pending { opacity: 0; }
+.track img.out { opacity: .18; transition: opacity .35s; }
+.track img.landed { animation: land 1s cubic-bezier(.2,.8,.2,1); }
+@keyframes land { 0% { transform: scale(1.22); filter: brightness(1.7); box-shadow: 0 0 34px 10px rgba(255,210,120,.95); }
+  100% { transform: none; filter: none; box-shadow: 0 8px 20px rgba(0,0,0,.5); } }
+.show.hold-rivers .track { animation-play-state: paused; }
+.pack-stage { transition: background .9s ease; }
+.pack-stage.landing { background: radial-gradient(circle at 50% 50%, rgba(20,4,8,.25), rgba(10,2,5,.15)); }
+.feat-wrap.arrive .feat img { animation: arrive .9s ease-out; }
+@keyframes arrive { 0% { filter: brightness(1.6); box-shadow: 0 0 60px 14px rgba(255,210,120,.85), 0 0 0 1px rgba(255,220,150,.3); } 100% { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .track img.landed, .feat-wrap.arrive .feat img, .mpack, .pack-cards .mcard { animation-duration: .01s !important; } }
 .pack-cards { position: absolute; inset: 0; perspective: 1600px;
   --cardh: min(44vh, 105vw);                                           /* tall enough on a folded cover screen, never wider than the screen */
   --rowstep: min(calc(var(--cardh) * .714 * .46), 30vw);               /* row spacing follows the card size, so cards never pile up */
@@ -3013,13 +3025,19 @@ async function openPack(ids) {
   await sleep(2000 * T);
   cap.textContent = "";
   // 5. into the card rivers
-  els.forEach((el, i) => { el.classList.remove("inrow"); el.style.transitionDelay = `${i * 80}ms`; el.style.transform = "translate(-50%, -50%) translateY(48vh) scale(.25)"; el.style.opacity = "0"; });
-  await sleep(1200);
-  stage.hidden = true; cardsBox.innerHTML = "";
-  ids.forEach(id => revealed.add(id)); markSeen(ids);
+  prepareRivers(ids); stage.classList.add("landing");
+  await sleep(350);
+  await Promise.all(els.map((el, i) => sleep(i * 160).then(() => {
+    const r = el.getBoundingClientRect();
+    el.style.transition = "none"; el.style.visibility = "hidden";
+    return landInRiver(ids[i], { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.height * (750 / 1050) }, { dur: 1150 });
+  })));
+  await sleep(400);
+  stage.hidden = true; stage.classList.remove("landing"); cardsBox.innerHTML = "";
+  markSeen(ids); releaseRivers();
   $("featWrap").style.visibility = ""; document.querySelector(".feat-cap").style.visibility = "";
   packPlaying = false; holdUntil = 0;
-  refreshShow(false); feature(ids[ids.length - 1], true); holdUntil = Date.now() + 6000;
+  await pullToCentre(ids[ids.length - 1], true); holdUntil = Date.now() + 6000;
   updatePackCount();
   maybeOpenPack();
 }
@@ -3305,10 +3323,12 @@ async function megaOpen(ids) {
     box.append(p); return p;
   });
   cap.textContent = `📦 ${ids.length} card${ids.length === 1 ? "" : "s"} waiting · ${n} pack${n === 1 ? "" : "s"}`;
+  prepareRivers(ids);
   stage.hidden = false;
   await sleep(1800 + Math.min(1000, n * 60));
-  cap.textContent = "Opening…";
-  const sr = stage.getBoundingClientRect();
+  cap.textContent = "Opening…"; stage.classList.add("landing");
+  const sr = stage.getBoundingClientRect(), flights = [];
+  const fan = Math.round(fly * 0.62), hop = Math.max(700, Math.min(1300, per * 0.75));
   for (let i = 0; i < n; i++) {
     const p = packs[i], r = p.getBoundingClientRect();
     p.classList.add("rip");
@@ -3317,22 +3337,25 @@ async function megaOpen(ids) {
     groups[i].forEach((id, k) => {
       const m = document.createElement("img"); m.className = "mcard"; m.alt = ""; m.src = cardSrc(id);
       const spread = (k - (groups[i].length - 1) / 2);
-      m.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;--dx:${spread * cw * 0.32}px;--dy:${-r.height * 0.45 - Math.abs(spread) * 4}px;--r:${spread * 7}deg;` +
-        `--ex:${(Math.random() - 0.5) * innerWidth * 0.8}px;--ey:${innerHeight * 0.5 - cy + sr.top}px;--d:${fly}ms;animation-delay:${k * Math.min(110, per / 14)}ms`;
-      cardsBox.append(m); setTimeout(() => m.remove(), fly + 900);
+      const dx = spread * cw * 0.32, dy = -r.height * 0.45 - Math.abs(spread) * 4, rot = spread * 7, lag = k * Math.min(110, per / 14);
+      m.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;--dx:${dx}px;--dy:${dy}px;--r:${rot}deg;--d:${fan}ms;animation-delay:${lag}ms`;
+      cardsBox.append(m);
+      flights.push(sleep(fan + lag + k * 40).then(() => {
+        m.remove();
+        return landInRiver(id, { x: sr.left + cx + dx, y: sr.top + cy + dy - 10, w: cw }, { dur: hop, rot });
+      }));
     });
     setTimeout(() => p.classList.add("done"), Math.min(per * 0.85, 1600));
     await sleep(per);
   }
-  await sleep(Math.min(2400, fly * 0.9));
-  ids.forEach(id => revealed.add(id)); markSeen(ids);
-  refreshShow(false);
+  await Promise.all(flights);
+  markSeen(ids); releaseRivers();
   cap.textContent = `✨ ${ids.length} card${ids.length === 1 ? "" : "s"} revealed!`;
   await sleep(2500);
-  stage.hidden = true; box.innerHTML = ""; cardsBox.innerHTML = ""; cap.textContent = "";
+  stage.hidden = true; stage.classList.remove("landing"); box.innerHTML = ""; cardsBox.innerHTML = ""; cap.textContent = "";
   $("pack").style.display = ""; $("featWrap").style.visibility = ""; document.querySelector(".feat-cap").style.visibility = "";
   packPlaying = false; holdUntil = 0;
-  feature(ids[0], false);
+  await pullToCentre(ids[0], false);
   updatePackCount();
   maybeOpenPack();
 }
@@ -3342,10 +3365,97 @@ function fillTrack(el, ids) {
   el.innerHTML = "";
   if (!ids.length) return;
   let list = ids.slice(); while (list.length < 10) list = list.concat(ids); // enough to fill wide screens
-  [...list, ...list].forEach(id => { const im = document.createElement("img"); im.src = cardSrc(id); im.alt = ""; im.loading = "lazy"; el.append(im); });
+  [...list, ...list].forEach(id => { const im = document.createElement("img"); im.src = cardSrc(id); im.alt = ""; im.loading = "lazy"; im.dataset.id = id; if (riverPending.has(id)) im.classList.add("pending"); el.append(im); });
   el.style.animationDuration = `${Math.max(40, list.length * 5)}s`;
 }
-let trackSig = "";
+let trackSig = "", riverPending = new Set(), featBusy = false;
+const calmMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* the copy of a card in the rivers that is on screen and closest to x */
+function riverSlot(id, x) {
+  const sel = `img[data-id="${CSS.escape(String(id))}"]`;
+  const imgs = [...$("mqTop").querySelectorAll(sel), ...$("mqBot").querySelectorAll(sel)];
+  let img = null, bd = Infinity;
+  for (const im of imgs) {
+    const r = im.getBoundingClientRect();
+    if (!r.width || r.right < innerWidth * 0.07 || r.left > innerWidth * 0.93) continue;
+    const d = Math.abs(r.left + r.width / 2 - x);
+    if (d < bd) { bd = d; img = im; }
+  }
+  return { img, imgs };
+}
+/* fly a flat copy of a card from one spot to another along a gentle arc; resolves with the copy (caller removes it) */
+function flyCard(src, from, to, { dur = 1000, rot = 0, fade = false, lift = 0.22 } = {}) {
+  const f = new Image(); f.src = src; f.className = "flyer"; f.alt = "";
+  f.style.width = `${from.w}px`; f.style.left = `${from.x - from.w / 2}px`; f.style.top = `${from.y - (from.w * 1.4) / 2}px`;
+  document.body.append(f);
+  const dx = to.x - from.x, dy = to.y - from.y, sc = to.w / from.w;
+  const arc = dy > 0 ? -Math.max(30, dy * lift) : Math.min(0, -dy * 0.06 - 10);  // downward: arc up first; upward: glide straight in
+  const kf = [
+    { transform: `rotate(${rot}deg)`, opacity: 1 },
+    { transform: `translate(${dx * 0.4}px, ${dy * 0.4 + arc}px) rotate(${rot * 0.3}deg) scale(${((1 + sc) / 2) * 1.08})`, opacity: 1, offset: 0.45 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: fade ? 0 : 1 }];
+  return new Promise(res => {
+    let done = false; const fin = () => { if (!done) { done = true; res(f); } };
+    try { const a = f.animate(kf, { duration: dur, easing: "cubic-bezier(.5,0,.25,1)", fill: "forwards" }); a.onfinish = fin; } catch { fin(); }
+    setTimeout(fin, dur + 300);
+  });
+}
+/* send a card from the pack into its own slot in the top or bottom river */
+async function landInRiver(id, from, opts = {}) {
+  const { img, imgs } = riverSlot(id, from.x);
+  let to;
+  if (img) { const r = img.getBoundingClientRect(); to = { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width }; }
+  else {                                            // its copies are off screen: glide into the right river and fade
+    const row = (imgs[0] ? imgs[0].closest(".mq") : document.querySelector(".show .mq")).getBoundingClientRect();
+    to = { x: innerWidth * (0.15 + Math.random() * 0.7), y: row.top + row.height / 2, w: row.height * 0.55 };
+  }
+  const f = await flyCard(cardSrc(id), from, to, { ...opts, fade: !img });
+  riverPending.delete(id);
+  imgs.forEach(im => im.classList.remove("pending"));
+  if (img) { img.classList.remove("landed"); void img.offsetWidth; img.classList.add("landed"); }
+  f.remove();
+}
+/* hold new cards back from the rivers until they land, and pause the rivers so the slots stay put */
+function prepareRivers(ids) {
+  ids.forEach(id => { revealed.add(id); riverPending.add(id); });
+  refreshShow(false);
+  $("show").classList.add("hold-rivers");
+}
+function releaseRivers() {
+  riverPending.clear();
+  document.querySelectorAll(".track img.pending").forEach(im => im.classList.remove("pending"));
+  $("show").classList.remove("hold-rivers");
+}
+/* lift a card out of the river and bring it to the centre; the old centre card sinks away */
+async function pullToCentre(id, isNew) {
+  const wrap = $("featWrap"), img = $("featImg");
+  if (featBusy) return;
+  const slot = calmMotion() || document.hidden || !img.getAttribute("src") || wrap.style.visibility === "hidden" ? null : riverSlot(id, innerWidth / 2).img;
+  if (!slot) { feature(id, isNew); return; }
+  featBusy = true;
+  featIdx = Math.max(0, shownList().indexOf(id));
+  const fr = img.getBoundingClientRect(), sr = slot.getBoundingClientRect();
+  const target = { x: fr.left + fr.width / 2, y: fr.top + fr.height / 2, w: fr.height * (750 / 1050) };
+  const fromTop = sr.top < fr.top;
+  wrap.classList.remove("flip", "arrive");
+  const out = wrap.animate([{ transform: "none", opacity: 1 },
+    { transform: `translateY(${fromTop ? 14 : -14}vh) scale(.55) rotate(${fromTop ? 5 : -5}deg)`, opacity: 0 }],
+    { duration: 650, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
+  slot.classList.add("out");
+  const pre = new Image(); pre.src = cardSrc(id);
+  await sleep(120);
+  const f = await flyCard(cardSrc(id), { x: sr.left + sr.width / 2, y: sr.top + sr.height / 2, w: sr.width }, target, { dur: 1150, lift: 0.1 });
+  img.src = cardSrc(id);
+  try { await img.decode(); } catch {}
+  out.cancel(); void wrap.offsetWidth; wrap.classList.add("arrive");
+  $("featBadge").hidden = !isNew;
+  if (isNew) holdUntil = Date.now() + 9000;
+  f.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: "forwards" });
+  setTimeout(() => f.remove(), 300);
+  setTimeout(() => slot.classList.remove("out"), 450);
+  setTimeout(() => wrap.classList.remove("arrive"), 1000);
+  featBusy = false;
+}
 const shownList = () => wallList.filter(id => revealed.has(id));
 function refreshShow(isNew, newId) {
   const ids = shownList();
@@ -3371,8 +3481,7 @@ function feature(id, isNew) {
 function cycle() {
   const list = shownList();
   if (!list.length || packPlaying || Date.now() < holdUntil) return;
-  featIdx = (featIdx + 1) % list.length;
-  feature(list[featIdx], false);
+  pullToCentre(list[(featIdx + 1) % list.length], false);
 }
 function setWallMode(m) {
   wallMode = m; ls.set("dh-wallmode", m);
@@ -3444,7 +3553,7 @@ async function openWall() {
   setWallMode(wallMode); makeSparks();
   if (!(await ensureCode("Enter the event code to see the Card Wall."))) { location.hash = ""; return; }
   if (DEMO && !demoCards.size) { $("showCount").textContent = "Preparing sample cards…"; await makeDemoCards(24); }
-  wallList = []; wallLoaded = false; trackSig = ""; revealed = new Set(); packQueue = []; packFirstAt = 0; packPlaying = false; $("packStage").hidden = true; $("featWrap").style.visibility = ""; $("wallGrid").innerHTML = ""; $("featImg").removeAttribute("src");
+  wallList = []; wallLoaded = false; trackSig = ""; revealed = new Set(); riverPending.clear(); featBusy = false; $("show").classList.remove("hold-rivers"); packQueue = []; packFirstAt = 0; packPlaying = false; $("packStage").hidden = true; $("featWrap").style.visibility = ""; $("wallGrid").innerHTML = ""; $("featImg").removeAttribute("src");
   await loadWall();
   clearInterval(wallTimer); wallTimer = setInterval(loadWall, DEMO ? 60000 : 20000);
   clearInterval(cycleTimer); cycleTimer = setInterval(cycle, 6000);
