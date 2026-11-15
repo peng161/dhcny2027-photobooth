@@ -194,6 +194,10 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
   background: radial-gradient(ellipse at 50% 45%, #5a1220 0%, #2a0a12 45%, #0c0609 100%); color: #fbe7bf; }
 .show::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(245,200,76,.05) 0deg 6deg, transparent 6deg 15deg); }
+.bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.show:not([data-bg="classic"])::after { display: none; }
+.show[data-bg="arena"] .sparks span { background: #9be7ff; box-shadow: 0 0 8px 2px rgba(140,220,255,.7); }
+.show[data-bg="lantern"] .sparks span { opacity: .5 !important; }
 .sparks { position: absolute; inset: 0; pointer-events: none; }
 .sparks span { position: absolute; bottom: -10px; border-radius: 50%; background: #ffd56a; box-shadow: 0 0 8px 2px rgba(255,200,90,.7); animation: rise linear infinite; }
 @keyframes rise { from { transform: translateY(0); } to { transform: translateY(-110vh); } }
@@ -237,9 +241,13 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
   background: linear-gradient(90deg, rgba(255,240,190,.2), #fff6cf); box-shadow: 0 0 10px 3px rgba(255,220,140,.9), 0 0 24px 8px rgba(255,200,90,.5); border-radius: 2px; }
 .pack-cut .spark { position: absolute; right: -9px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%;
   background: radial-gradient(circle, #fff, rgba(255,230,160,.9) 35%, rgba(255,200,90,0) 70%); box-shadow: 0 0 18px 6px rgba(255,230,160,.9); }
+.pack-cut { height: 5px; margin-top: -2px; background: linear-gradient(90deg, rgba(255,250,220,.95), #fff6cf); box-shadow: 0 0 14px 5px rgba(255,225,150,.95), 0 -10px 40px 14px rgba(255,200,110,.55); }
+.pack .bit { position: absolute; width: 7px; height: 3px; margin: -1px 0 0 -3px; z-index: 5; pointer-events: none; border-radius: 1px;
+  background: linear-gradient(90deg, #fff6d0, #d9a93c); box-shadow: 0 0 6px rgba(255,220,140,.9); animation: bit 1s ease-out forwards; }
+@keyframes bit { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
 .pack-cut.go { transition: transform 1.4s cubic-bezier(.45,.05,.55,.95); transform: scaleX(1); }
 .pack-cut.done { opacity: 0; transition: opacity .3s; transform: scaleX(1); }
-.pack-cut.done .spark { display: none; }
+.pack-cut .spark { display: none; }
 .pack.torn .pack-top { transform: translate(6vh, -22vh) rotate(14deg); opacity: 0; transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s; }
 .pack.gone { transform: translateY(85vh) !important; opacity: 1; transition: transform 1s cubic-bezier(.6,0,.4,1); }
 .pack-burst.top { top: calc(50% - 32vh * .87); }
@@ -500,12 +508,14 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
       <button class="btn" id="modeShow" type="button" aria-pressed="true">✨ Showcase</button>
       <button class="btn" id="modeGrid" type="button" aria-pressed="false">▦ Grid</button>
     </div>
+    <button class="btn" id="bgBtn" type="button">🎨 Background</button>
     <button class="btn" id="fullBtn" type="button">⛶ Full screen</button>
     <a class="btn primary" href="#">📷 Make your card</a>
   </div>
   <div class="wall-grid" id="wallGrid"></div>
   <div class="empty" id="wallEmpty" hidden>No cards yet. Make yours and tap <b>Post to Card Wall</b>.</div>
   <div class="show" id="show">
+    <canvas class="bg-canvas" id="bgCanvas" hidden aria-hidden="true"></canvas>
     <div class="sparks" id="sparks" aria-hidden="true"></div>
     <div class="mq"><div class="track" id="mqTop"></div></div>
     <div class="stage">
@@ -2682,6 +2692,40 @@ function maybeOpenPack() {
   }
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+/* A real rip: the top strip peels up along a jagged foil edge, light pours out, flakes fly */
+function tearPack(dur) {
+  const pack = $("pack"), art = $("packImg"), top = $("packTop"), cut = $("packCut"), TY = 6.5, STRIP = 9;
+  const R = rng(Math.floor(Math.random() * 1e6)), N = 34, pts = [];
+  for (let i = 0; i <= N; i++) pts.push([(i / N) * 100, TY + (i % 2 ? 0.7 : -0.45) + (R() - 0.5) * 0.7]);
+  top.style.height = STRIP + "%";
+  top.style.clipPath = "polygon(0 0, 100% 0, " + pts.slice().reverse().map(([x, y]) => `${x.toFixed(2)}% ${(y / STRIP * 100).toFixed(2)}%`).join(", ") + ")";
+  top.style.transformOrigin = "100% 75%";
+  cut.style.opacity = "1";
+  let lastBit = 0;
+  const start = performance.now();
+  return new Promise((res) => {
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / dur), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2, cx = e * 100;
+      const edge = pts.filter(([x]) => x <= cx).map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`);
+      art.style.clipPath = `polygon(${edge.length ? edge.join(", ") + ", " : "0% " + TY + "%, "}${cx.toFixed(2)}% ${TY}%, ${cx.toFixed(2)}% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+      top.style.transform = `rotate(${(e * 7).toFixed(2)}deg) translateY(${(-e * 1.4).toFixed(2)}vh)`;
+      cut.style.transform = `scaleX(${e.toFixed(3)})`;
+      if (now - lastBit > 35 && p < 1) {
+        lastBit = now;
+        for (let j = 0; j < 2; j++) {
+          const b = document.createElement("i"); b.className = "bit";
+          b.style.left = cx + "%"; b.style.top = TY + "%";
+          b.style.setProperty("--dx", `${Math.round(Math.random() * 70 - 15)}px`);
+          b.style.setProperty("--dy", `${Math.round(-30 - Math.random() * 70)}px`);
+          b.style.setProperty("--r", `${Math.round(Math.random() * 720)}deg`);
+          pack.append(b); setTimeout(() => b.remove(), 1000);
+        }
+      }
+      if (p < 1) requestAnimationFrame(step); else res();
+    };
+    requestAnimationFrame(step);
+  });
+}
 async function openPack(ids) {
   packPlaying = true; updatePackCount(); holdUntil = Date.now() + 120000;
   const T = DEMO ? 0.6 : 1; // the demo runs a little faster
@@ -2689,6 +2733,7 @@ async function openPack(ids) {
   const flash = (top) => { burst.className = "pack-burst" + (top ? " top" : ""); void burst.offsetWidth; burst.classList.add("go"); };
   $("featWrap").style.visibility = "hidden"; document.querySelector(".feat-cap").style.visibility = "hidden";
   cardsBox.innerHTML = ""; cap.textContent = ""; pack.className = "pack"; cut.className = "pack-cut";
+  { const pt = $("packTop"); ["transform", "opacity", "transition", "clipPath", "height", "transformOrigin"].forEach(k => pt.style[k] = ""); $("packImg").style.clipPath = ""; cut.style.cssText = ""; }
   cardsBox.classList.add("behind");
   const key = packKeyFor(ids), art = await getPackArt(key);
   if (art) { $("packImg").src = art; $("packTop").style.backgroundImage = `url("${art}")`; }
@@ -2698,9 +2743,10 @@ async function openPack(ids) {
   await sleep(1500 * T);
   // 2. a glowing line slowly slices across the top of the wrapper
   cap.textContent = "Opening…";
-  cut.classList.add("go");
-  await sleep(1500);
-  pack.classList.add("torn"); flash(true); cut.classList.add("done");
+  await tearPack(1700);
+  pack.classList.add("torn"); flash(true);
+  cut.style.transition = "opacity .5s"; cut.style.opacity = "0";
+  { const pt = $("packTop"); pt.style.transition = "transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s"; pt.style.transform = "translate(9vh, -26vh) rotate(32deg)"; pt.style.opacity = "0"; }
   // 3. the stack rises out of the opening, then the wrapper slides away
   const back = "card-back.webp", n = ids.length;
   const els = ids.map((id, i) => {
@@ -2758,6 +2804,141 @@ async function openPack(ids) {
   maybeOpenPack();
 }
 
+/* --- animated wall backgrounds --- */
+const WALL_BGS = { classic: "Red Sunburst", lantern: "Lantern Night", ink: "Ink & Gold Mountains", arena: "Holo Arena" };
+let wallBg = (new URLSearchParams(location.search).get("bg")) || ls.get("dh-wallbg") || "classic";
+if (!WALL_BGS[wallBg]) wallBg = "classic";
+let bgRaf = 0, bgState = null;
+function setWallBg(k) {
+  wallBg = k; ls.set("dh-wallbg", k);
+  $("show").dataset.bg = k; $("bgBtn").textContent = `🎨 ${WALL_BGS[k]}`;
+  bgState = null; startBg();
+}
+function startBg() {
+  cancelAnimationFrame(bgRaf);
+  const cv = $("bgCanvas");
+  if (wallBg === "classic" || $("wall").hidden) { cv.hidden = true; return; }
+  cv.hidden = false;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let last = performance.now();
+  const loop = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    drawBg(cv, dt, now / 1000);
+    if (!still) bgRaf = requestAnimationFrame(loop);
+  };
+  bgRaf = requestAnimationFrame(loop);
+}
+function sizeBg(cv) {
+  const k = Math.min(1.5, devicePixelRatio || 1), w = innerWidth, h = innerHeight;
+  if (cv.width !== Math.round(w * k) || cv.height !== Math.round(h * k)) { cv.width = Math.round(w * k); cv.height = Math.round(h * k); bgState = null; }
+  return { k, w, h };
+}
+function drawBg(cv, dt, t) {
+  const { k, w, h } = sizeBg(cv), g = cv.getContext("2d");
+  g.setTransform(k, 0, 0, k, 0, 0);
+  if (wallBg === "lantern") bgLantern(g, w, h, dt, t);
+  else if (wallBg === "ink") bgInk(g, w, h, dt, t);
+  else if (wallBg === "arena") bgArena(g, w, h, dt, t);
+}
+/* 1. Lantern Night: lanterns float upward at three depths */
+function bgLantern(g, w, h, dt, t) {
+  if (!bgState) {
+    const R = rng(3);
+    bgState = { L: Array.from({ length: 46 }, () => ({ x: R() * w, y: R() * h * 1.2, z: 0.25 + R() * 0.75, ph: R() * 6.28 })), S: Array.from({ length: 70 }, () => ({ x: R() * w, y: R() * h, z: R(), ph: R() * 6.28 })) };
+  }
+  const sky = g.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#140a2a"); sky.addColorStop(0.55, "#3a0d22"); sky.addColorStop(1, "#6a1a1c");
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  const glow = g.createRadialGradient(w / 2, h * 1.05, 10, w / 2, h * 1.05, h * 0.9);
+  glow.addColorStop(0, "rgba(255,150,60,.35)"); glow.addColorStop(1, "rgba(255,150,60,0)");
+  g.fillStyle = glow; g.fillRect(0, 0, w, h);
+  bgState.S.forEach(s => { const a = 0.2 + 0.5 * (0.5 + 0.5 * Math.sin(t * 1.5 + s.ph)) * s.z; g.fillStyle = `rgba(255,230,170,${a})`; g.fillRect(s.x, s.y * 0.6, 1.6, 1.6); });
+  bgState.L.sort((a, b) => a.z - b.z).forEach(l => {
+    l.y -= (8 + 30 * l.z) * dt; if (l.y < -60) { l.y = h + 60; l.x = Math.random() * w; }
+    const x = l.x + Math.sin(t * 0.5 + l.ph) * 14 * l.z, y = l.y, s = 6 + 22 * l.z;
+    const halo = g.createRadialGradient(x, y, 0, x, y, s * 3.2);
+    halo.addColorStop(0, `rgba(255,140,60,${0.35 * l.z})`); halo.addColorStop(1, "rgba(255,140,60,0)");
+    g.fillStyle = halo; g.beginPath(); g.arc(x, y, s * 3.2, 0, 7); g.fill();
+    const body = g.createRadialGradient(x - s * 0.3, y - s * 0.3, s * 0.1, x, y, s * 1.1);
+    body.addColorStop(0, `rgba(255,190,120,${0.5 + 0.5 * l.z})`); body.addColorStop(0.6, `rgba(220,40,40,${0.45 + 0.55 * l.z})`); body.addColorStop(1, `rgba(120,10,20,${0.4 + 0.6 * l.z})`);
+    g.fillStyle = body; g.beginPath(); g.ellipse(x, y, s * 0.85, s, 0, 0, 7); g.fill();
+    g.fillStyle = `rgba(245,200,76,${0.4 + 0.6 * l.z})`; g.fillRect(x - s * 0.4, y - s * 1.08, s * 0.8, s * 0.18); g.fillRect(x - s * 0.4, y + s * 0.92, s * 0.8, s * 0.16);
+  });
+}
+/* 2. Ink & Gold Mountains: ink-wash ridges, drifting gold clouds, soft sun */
+function bgInk(g, w, h, dt, t) {
+  if (!bgState) {
+    const R = rng(8), ridges = [];
+    for (let L = 0; L < 4; L++) {
+      const pts = [], base = h * (0.5 + L * 0.12), amp = h * (0.16 - L * 0.025);
+      for (let x = -20; x <= w + 20; x += 18) pts.push([x, base - amp * (0.5 + 0.5 * Math.sin(x / (120 + L * 40) + L * 2 + R())) - R() * amp * 0.25]);
+      ridges.push(pts);
+    }
+    bgState = { ridges, clouds: Array.from({ length: 9 }, (_, i) => ({ x: R() * w, y: h * (0.25 + R() * 0.5), s: 26 + R() * 40, v: 6 + R() * 12, d: i % 2 ? 1 : -1 })), flakes: Array.from({ length: 50 }, () => ({ x: R() * w, y: R() * h, v: 6 + R() * 14, ph: R() * 6.28 })) };
+  }
+  const sky = g.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#2b0a12"); sky.addColorStop(0.6, "#4a1018"); sky.addColorStop(1, "#160608");
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  const sx = w * 0.72, sy = h * 0.3, sr = Math.min(w, h) * 0.12;
+  const sun = g.createRadialGradient(sx, sy, sr * 0.2, sx, sy, sr * 3);
+  sun.addColorStop(0, "rgba(255,214,120,.55)"); sun.addColorStop(0.35, "rgba(255,190,90,.18)"); sun.addColorStop(1, "rgba(255,190,90,0)");
+  g.fillStyle = sun; g.beginPath(); g.arc(sx, sy, sr * 3, 0, 7); g.fill();
+  g.fillStyle = "rgba(255,220,140,.75)"; g.beginPath(); g.arc(sx, sy, sr, 0, 7); g.fill();
+  const tones = ["rgba(120,30,40,.55)", "rgba(80,18,28,.7)", "rgba(45,10,16,.85)", "rgba(20,6,9,.95)"];
+  bgState.ridges.forEach((pts, L) => {
+    g.beginPath(); g.moveTo(pts[0][0], h); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(pts[pts.length - 1][0], h); g.closePath();
+    const fill = g.createLinearGradient(0, h * 0.35, 0, h); fill.addColorStop(0, tones[L]); fill.addColorStop(1, "rgba(10,3,5,.95)");
+    g.fillStyle = fill; g.fill();
+    g.strokeStyle = `rgba(245,200,110,${0.28 - L * 0.05})`; g.lineWidth = 1.5; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke();
+    // mist between layers
+    const mist = g.createLinearGradient(0, pts[0][1] - 10, 0, pts[0][1] + h * 0.1);
+    mist.addColorStop(0, "rgba(255,220,180,0)"); mist.addColorStop(0.5, "rgba(255,220,180,.06)"); mist.addColorStop(1, "rgba(255,220,180,0)");
+    g.fillStyle = mist; g.fillRect(0, pts[0][1] - 10, w, h * 0.12);
+  });
+  g.save(); g.shadowColor = "rgba(255,200,90,.6)"; g.shadowBlur = 8;
+  bgState.clouds.forEach(c => { c.x += c.v * c.d * dt; if (c.x > w + 120) c.x = -120; if (c.x < -120) c.x = w + 120; xiangyun(g, c.x, c.y, c.s, "rgba(245,200,76,.42)", 3); });
+  g.restore();
+  bgState.flakes.forEach(f => { f.y += f.v * dt; if (f.y > h) { f.y = -5; f.x = Math.random() * w; } g.fillStyle = "rgba(255,215,120,.55)"; g.fillRect(f.x + Math.sin(t + f.ph) * 6, f.y, 2, 2); });
+}
+/* 3. Holo Arena: perspective grid floor, rotating prismatic rays, floating card outlines */
+function bgArena(g, w, h, dt, t) {
+  if (!bgState) { const R = rng(12); bgState = { cards: Array.from({ length: 16 }, () => ({ x: R() * w, y: R() * h, z: 0.3 + R() * 0.7, r: (R() - 0.5) * 0.6 })) }; }
+  const sky = g.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#050a1e"); sky.addColorStop(0.6, "#0d1640"); sky.addColorStop(1, "#06081a");
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  // rotating rays
+  const cx = w / 2, cy = h * 0.46;
+  g.save(); g.translate(cx, cy); g.rotate(t * 0.05);
+  for (let i = 0; i < 18; i++) {
+    const a0 = (i / 18) * Math.PI * 2, hue = (i * 40 + t * 20) % 360;
+    g.fillStyle = `hsla(${hue},90%,65%,.06)`; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, Math.max(w, h), a0, a0 + 0.12); g.closePath(); g.fill();
+  }
+  g.restore();
+  const core = g.createRadialGradient(cx, cy, 0, cx, cy, h * 0.6); core.addColorStop(0, "rgba(140,200,255,.25)"); core.addColorStop(1, "rgba(140,200,255,0)");
+  g.fillStyle = core; g.fillRect(0, 0, w, h);
+  // grid floor
+  const hy = h * 0.66;
+  g.save(); g.beginPath(); g.rect(0, hy, w, h - hy); g.clip();
+  const fl = g.createLinearGradient(0, hy, 0, h); fl.addColorStop(0, "rgba(10,20,60,.2)"); fl.addColorStop(1, "rgba(30,10,70,.8)");
+  g.fillStyle = fl; g.fillRect(0, hy, w, h - hy);
+  g.lineWidth = 1.2;
+  for (let i = -20; i <= 20; i++) { g.strokeStyle = `rgba(90,200,255,${0.35 - Math.abs(i) * 0.012})`; g.beginPath(); g.moveTo(cx + i * 14, hy); g.lineTo(cx + i * w * 0.18, h); g.stroke(); }
+  const off = (t * 0.35) % 1;
+  for (let j = 0; j < 14; j++) { const p = (j + off) / 14, y = hy + (h - hy) * p * p; g.strokeStyle = `rgba(200,120,255,${0.15 + 0.4 * p})`; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.restore();
+  g.strokeStyle = "rgba(140,220,255,.6)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, hy); g.lineTo(w, hy); g.stroke();
+  // floating card outlines
+  bgState.cards.forEach(c => {
+    c.y -= (6 + 16 * c.z) * dt; if (c.y < -80) { c.y = h + 80; c.x = Math.random() * w; }
+    const ch = 40 + 50 * c.z, cw = ch * 0.714;
+    g.save(); g.translate(c.x, c.y); g.rotate(c.r + Math.sin(t * 0.4 + c.x) * 0.1);
+    g.strokeStyle = `rgba(160,220,255,${0.12 + 0.25 * c.z})`; g.lineWidth = 1.5; rr(g, -cw / 2, -ch / 2, cw, ch, 5); g.stroke();
+    g.fillStyle = `rgba(160,220,255,${0.03 + 0.05 * c.z})`; g.fill();
+    g.restore();
+  });
+}
+addEventListener("resize", () => { bgState = null; });
+
 /* --- showcase --- */
 function fillTrack(el, ids) {
   el.innerHTML = "";
@@ -2813,6 +2994,7 @@ function makeSparks() {
   }
 }
 async function openWall() {
+  setTimeout(() => setWallBg(wallBg), 0);
   new Image().src = "card-back.webp";
   setTimeout(() => PACK_ORDER.forEach(k => getPackArt(k)), 1500);
   $("wall").hidden = false;
@@ -2838,10 +3020,11 @@ async function openWall() {
     demoTimer = setTimeout(demoPack, 2000);
   }
 }
-function closeWall() { $("wall").hidden = true; clearInterval(wallTimer); clearInterval(cycleTimer); clearTimeout(demoTimer); }
+function closeWall() { cancelAnimationFrame(bgRaf); $("wall").hidden = true; clearInterval(wallTimer); clearInterval(cycleTimer); clearTimeout(demoTimer); }
 $("postBtn").addEventListener("click", postToWall);
 $("wallViewClose").addEventListener("click", () => { $("wallView").hidden = true; });
 $("modeShow").addEventListener("click", () => setWallMode("show"));
+$("bgBtn").addEventListener("click", () => { const keys = Object.keys(WALL_BGS); setWallBg(keys[(keys.indexOf(wallBg) + 1) % keys.length]); });
 $("modeGrid").addEventListener("click", () => setWallMode("grid"));
 $("fullBtn").addEventListener("click", () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); } catch {} });
 $("featImg").addEventListener("click", () => { $("wallViewImg").src = $("featImg").src; $("wallView").hidden = false; });
