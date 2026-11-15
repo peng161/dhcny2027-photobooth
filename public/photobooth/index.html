@@ -109,7 +109,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
 .card-wrap { perspective: 1200px; display: grid; place-items: center; padding: 6px; }
-.card-tilt { position: relative; width: 100%; max-width: 400px; aspect-ratio: 750 / 1050; transition: transform .25s ease; transform-style: preserve-3d; border-radius: 4.5%/3.2%; }
+.card-tilt { position: relative; width: 100%; max-width: min(400px, calc((100vh - 40px) * .714)); max-width: min(400px, calc((100svh - 40px) * .714)); aspect-ratio: 750 / 1050; transition: transform .25s ease; transform-style: preserve-3d; border-radius: 4.5%/3.2%; }
 .card-tilt canvas { width: 100%; height: 100%; display: block; border-radius: 4.5%/3.2%; box-shadow: 0 18px 40px rgba(30, 10, 40, .28); touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
 .card-tilt.pan canvas { touch-action: none; cursor: grab; outline: 3px dashed var(--accent); outline-offset: 4px; }
 .card-tilt.pan canvas:active { cursor: grabbing; }
@@ -214,7 +214,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .track.rev { animation-direction: reverse; }
 .track img { height: 15vh; aspect-ratio: 750 / 1050; border-radius: 6% / 4.3%; box-shadow: 0 8px 20px rgba(0,0,0,.5); }
 @keyframes mq { to { transform: translateX(-50%); } }
-.stage { position: relative; z-index: 2; display: grid; justify-items: center; align-content: center; gap: 12px; height: 100%; perspective: 1400px; }
+.show-stage { position: relative; z-index: 2; display: grid; justify-items: center; align-content: center; gap: 12px; height: 100%; perspective: 1400px; }
 .glow { position: absolute; width: 60vh; height: 60vh; border-radius: 50%; background: radial-gradient(circle, rgba(255,200,90,.55), rgba(255,200,90,0) 65%); animation: pulse 4s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(.9); opacity: .7; } 50% { transform: scale(1.08); opacity: 1; } }
 .feat-wrap { transform-style: preserve-3d; }
@@ -340,6 +340,19 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .code-box p { margin: 0; color: var(--muted); }
 .code-box input { font-size: 22px; letter-spacing: .12em; text-transform: uppercase; text-align: center; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
 .btn.post { background: var(--gold); color: #1a1220; border-color: var(--gold); }
+/* Dual-screen phones and foldables spanned across the hinge: one column per screen, nothing on the fold */
+@media (horizontal-viewport-segments: 2) {
+  body.booth { padding-left: 0; padding-right: 0; }
+  body.booth header.top { padding-inline: 16px; }
+  body.booth .app { max-width: none; grid-template-columns: env(viewport-segment-width 0 0, 1fr) env(viewport-segment-width 1 0, 1fr);
+    column-gap: calc(env(viewport-segment-left 1 0, 0px) - env(viewport-segment-right 0 0, 0px)); }
+  body.booth .app > * { margin-inline: 16px; }
+  body.booth .stage { position: static; }
+}
+/* Folded "tent / laptop" posture (top and bottom screens): keep the card on the top screen */
+@media (vertical-viewport-segments: 2) {
+  body.booth .card-tilt { max-width: min(400px, calc((env(viewport-segment-height 0 0, 50vh) - 40px) * .714)); }
+}
 #print-root { display: none; }
 @media print {
   body.wall-mode #print-root { display: block !important; }
@@ -570,7 +583,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
     <canvas class="bg-canvas" id="bgCanvas" hidden aria-hidden="true"></canvas>
     <div class="sparks" id="sparks" aria-hidden="true"></div>
     <div class="mq"><div class="track" id="mqTop"></div></div>
-    <div class="stage">
+    <div class="show-stage">
       <div class="glow" aria-hidden="true"></div>
       <div class="feat-wrap" id="featWrap">
         <div class="feat"><img id="featImg" alt="Featured card"><div class="feat-shine"></div></div>
