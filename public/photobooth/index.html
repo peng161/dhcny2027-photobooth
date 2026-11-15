@@ -208,7 +208,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) {
 /* Phones and small screens: one compact row of icon buttons, and an always-visible "Make your card" button */
 @media (max-width: 700px), (pointer: coarse) and (max-width: 900px) {
   .show[data-bg="goat"] .feat { height: min(41vh, 100vw); }
-  .show[data-bg="goat"] .feat-cap { min-height: 86px; max-width: 52vw; flex-wrap: wrap; justify-content: center; text-align: center; gap: 2px 10px; font-size: 14px; }
+  .show[data-bg="goat"] .feat-cap { min-height: 86px; width: 52vw; max-width: 52vw; flex-wrap: wrap; justify-content: center; text-align: center; gap: 2px 10px; font-size: 14px; }
   .wall-head { flex-wrap: nowrap; gap: 6px; }
   .wall-head h1 { font-size: clamp(16px, 5vw, 22px); white-space: nowrap; }
   .wall-head #wallCount { display: none; }
@@ -3828,7 +3828,7 @@ async function openPack(ids) {
 }
 
 /* --- animated wall backgrounds --- */
-const WALL_BGS = { ink: "Ink & Gold Mountains", goat: "Year of the Goat", lantern: "Lantern Night", arena: "Holo Arena", classic: "Red Sunburst" };
+const WALL_BGS = { ink: "Ink & Gold Mountains", goat: "Year of the Goat", koi: "Koi Pond", fireworks: "Fireworks Night", prosperity: "Prosperity Rain", lantern: "Lantern Night", neon: "Neon Grid", arena: "Holo Arena", classic: "Red Sunburst" };
 let wallBg = (new URLSearchParams(location.search).get("bg")) || ls.get("dh-wallbg") || "ink";
 if (!WALL_BGS[wallBg]) wallBg = "ink";
 let bgRaf = 0, bgState = null;
@@ -3863,6 +3863,10 @@ function drawBg(cv, dt, t) {
   else if (wallBg === "ink") bgInk(g, w, h, dt, t);
   else if (wallBg === "arena") bgArena(g, w, h, dt, t);
   else if (wallBg === "goat") bgGoat(g, w, h, dt, t);
+  else if (wallBg === "koi") bgKoi(g, w, h, dt, t);
+  else if (wallBg === "fireworks") bgFireworks(g, w, h, dt, t);
+  else if (wallBg === "prosperity") bgProsperity(g, w, h, dt, t);
+  else if (wallBg === "neon") bgNeon(g, w, h, dt, t);
 }
 /* 1. Lantern Night: lanterns float upward at three depths */
 function bgLantern(g, w, h, dt, t) {
@@ -4029,16 +4033,195 @@ function papercutMedallion(g, x, y, r) {
   for (let i = 0; i < 16; i++) { g.save(); g.rotate((i / 16) * Math.PI * 2); g.beginPath(); g.ellipse(0, -r * 0.82, r * 0.06, r * 0.12, 0, 0, Math.PI * 2); g.stroke(); g.restore(); }
   g.restore();
 }
+/* 6. Koi Pond: koi glide under the water, ripples, lotus pads */
+const KOI_COLS = [{ body: "#ff7b2c", patch: "#fff4ea", fin: "rgba(255,150,80,.7)" }, { body: "#fbf6ef", patch: "#e2342a", fin: "rgba(255,255,255,.65)" }, { body: "#f5c84c", patch: "#fff1b0", fin: "rgba(245,200,76,.7)" }];
+function bgKoi(g, w, h, dt, t) {
+  if (!bgState) {
+    const R = rng(5);
+    bgState = {
+      koi: Array.from({ length: Math.max(6, Math.round((w * h) / 140000)) }, (_, i) => ({ x: R() * w, y: R() * h, a: R() * 6.28, v: 16 + R() * 20, s: 0.8 + R() * 0.7, turn: 0.25 + R() * 0.35, ph: R() * 6.28, c: i % 3 })),
+      pads: Array.from({ length: Math.max(5, Math.round((w * h) / 110000)) }, () => ({ x: R() * w, y: R() * h, r: 26 + R() * 30, rot: R() * 6.28, flower: R() < 0.3 })),
+      rip: [], next: 0,
+    };
+  }
+  const S = bgState;
+  const wg = g.createRadialGradient(w / 2, h * 0.45, 30, w / 2, h / 2, Math.max(w, h) * 0.8);
+  wg.addColorStop(0, "#14595c"); wg.addColorStop(0.55, "#0a3639"); wg.addColorStop(1, "#031b1e");
+  g.fillStyle = wg; g.fillRect(0, 0, w, h);
+  // soft caustic light
+  g.save(); g.globalCompositeOperation = "screen"; g.strokeStyle = "rgba(140,230,220,.05)"; g.lineWidth = 2;
+  for (let i = 0; i < 14; i++) { g.beginPath(); for (let x = 0; x <= w; x += 30) { const y = (i / 14) * h + Math.sin(x / 90 + t * 0.6 + i) * 14; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+  g.restore();
+  // koi
+  S.koi.forEach(k => {
+    k.a += Math.sin(t * 0.35 + k.ph) * k.turn * dt; k.x += Math.cos(k.a) * k.v * dt; k.y += Math.sin(k.a) * k.v * dt;
+    if (k.x < -80) k.x = w + 70; if (k.x > w + 80) k.x = -70; if (k.y < -80) k.y = h + 70; if (k.y > h + 80) k.y = -70;
+    const C = KOI_COLS[k.c], L = 54 * k.s, Wd = 15 * k.s, wag = Math.sin(t * 5 + k.ph) * 0.35;
+    g.save(); g.translate(k.x, k.y); g.rotate(k.a);
+    g.save(); g.translate(6, 9); g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.ellipse(0, 0, L * 0.5, Wd * 0.55, 0, 0, 6.28); g.fill(); g.restore();
+    g.save(); g.translate(-L * 0.42, 0); g.rotate(wag); g.fillStyle = C.fin; g.beginPath(); g.moveTo(0, 0);
+    g.quadraticCurveTo(-L * 0.25, -Wd * 1.1, -L * 0.45, -Wd * 0.8); g.quadraticCurveTo(-L * 0.3, 0, -L * 0.45, Wd * 0.8); g.quadraticCurveTo(-L * 0.25, Wd * 1.1, 0, 0); g.fill(); g.restore();
+    g.fillStyle = C.fin; [-1, 1].forEach(sd => { g.save(); g.translate(L * 0.12, sd * Wd * 0.45); g.rotate(sd * (0.9 + wag * 0.5)); g.beginPath(); g.ellipse(0, sd * Wd * 0.3, Wd * 0.25, Wd * 0.55, 0, 0, 6.28); g.fill(); g.restore(); });
+    g.save(); g.beginPath(); g.ellipse(0, 0, L * 0.5, Wd * 0.5, 0, 0, 6.28); g.fillStyle = C.body; g.fill(); g.clip();
+    g.fillStyle = C.patch; [[L * 0.18, -Wd * 0.15, 0.32], [-L * 0.12, Wd * 0.2, 0.26], [L * 0.38, 0, 0.14]].forEach(([px, py, r]) => { g.beginPath(); g.ellipse(px, py, L * r, Wd * 0.42, 0.3, 0, 6.28); g.fill(); });
+    const sh = g.createLinearGradient(0, -Wd / 2, 0, Wd / 2); sh.addColorStop(0, "rgba(255,255,255,.35)"); sh.addColorStop(0.5, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.2)");
+    g.fillStyle = sh; g.fillRect(-L / 2, -Wd / 2, L, Wd); g.restore();
+    g.restore();
+  });
+  // ripples
+  if (t > S.next) { S.next = t + 0.5 + Math.random() * 0.9; S.rip.push({ x: Math.random() * w, y: Math.random() * h, r: 2, life: 1 }); }
+  g.lineWidth = 1.5;
+  S.rip = S.rip.filter(r => (r.life -= dt * 0.35) > 0);
+  S.rip.forEach(r => { r.r += dt * 38; g.strokeStyle = `rgba(200,250,245,${r.life * 0.35})`; [1, 0.7].forEach(m => { g.beginPath(); g.ellipse(r.x, r.y, r.r * m, r.r * m * 0.6, 0, 0, 6.28); g.stroke(); }); });
+  // lotus pads float on top
+  S.pads.forEach((p, i) => {
+    const bx = p.x + Math.sin(t * 0.3 + i) * 4, by = p.y + Math.cos(t * 0.25 + i) * 3;
+    g.save(); g.translate(bx, by); g.rotate(p.rot + Math.sin(t * 0.2 + i) * 0.05);
+    g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.arc(4, 6, p.r, 0.2, 6.08); g.lineTo(4, 6); g.fill();
+    const pg = g.createRadialGradient(-p.r * 0.3, -p.r * 0.3, 2, 0, 0, p.r); pg.addColorStop(0, "#5fae5a"); pg.addColorStop(1, "#24633a");
+    g.fillStyle = pg; g.beginPath(); g.arc(0, 0, p.r, 0.2, 6.08); g.lineTo(0, 0); g.fill();
+    g.strokeStyle = "rgba(200,240,170,.25)"; g.lineWidth = 1; g.beginPath(); for (let a = 0.6; a < 6; a += 0.7) { g.moveTo(0, 0); g.lineTo(Math.cos(a) * p.r * 0.9, Math.sin(a) * p.r * 0.9); } g.stroke();
+    if (p.flower) {
+      g.rotate(-p.rot); const fr = p.r * 0.45;
+      for (let k = 0; k < 8; k++) { g.save(); g.rotate((k / 8) * 6.28 + t * 0.05); g.fillStyle = k % 2 ? "#f6a6c4" : "#ffd0e0"; g.beginPath(); g.ellipse(0, -fr * 0.6, fr * 0.32, fr * 0.7, 0, 0, 6.28); g.fill(); g.restore(); }
+      g.fillStyle = "#ffd56a"; g.beginPath(); g.arc(0, 0, fr * 0.25, 0, 6.28); g.fill();
+    }
+    g.restore();
+  });
+}
+
+/* 7. Fireworks Night: shells burst over a city skyline */
+const FW_COLS = ["#ffd36a", "#ff5a5a", "#ff7ad2", "#7fe0ff", "#a6ff7a", "#ffffff", "#ffa04d"];
+function bgFireworks(g, w, h, dt, t) {
+  if (!bgState) {
+    const R = rng(8), city = [];
+    for (let x = -10; x < w + 10;) { const bw = 30 + R() * 70, bh = h * (0.06 + R() * 0.16); city.push({ x, w: bw, h: bh, lit: Array.from({ length: Math.floor((bw / 12) * (bh / 16)) }, () => R() < 0.35) }); x += bw + 2; }
+    bgState = { stars: Array.from({ length: 140 }, () => ({ x: R() * w, y: R() * h * 0.75, z: R(), ph: R() * 6.28 })), city, shells: [], parts: [], next: 0 };
+  }
+  const S = bgState;
+  const sky = g.createLinearGradient(0, 0, 0, h); sky.addColorStop(0, "#04051a"); sky.addColorStop(0.6, "#160a2e"); sky.addColorStop(1, "#3a1030");
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  S.stars.forEach(st => { g.fillStyle = `rgba(255,255,255,${0.25 + 0.5 * st.z * (0.6 + 0.4 * Math.sin(t * 2 + st.ph))})`; g.fillRect(st.x, st.y, 1 + st.z, 1 + st.z); });
+  if (t > S.next) {
+    S.next = t + 0.45 + Math.random() * 1.0;
+    S.shells.push({ x: w * (0.08 + Math.random() * 0.84), y: h, vx: (Math.random() - 0.5) * 40, vy: -(h * (0.62 + Math.random() * 0.26)), col: FW_COLS[Math.floor(Math.random() * FW_COLS.length)], willow: Math.random() < 0.25 });
+  }
+  g.save(); g.globalCompositeOperation = "lighter";
+  S.shells = S.shells.filter(sh => {
+    sh.x += sh.vx * dt; sh.y += sh.vy * dt; sh.vy += h * 0.55 * dt;
+    g.fillStyle = "rgba(255,230,180,.9)"; g.beginPath(); g.arc(sh.x, sh.y, 2.2, 0, 6.28); g.fill();
+    g.fillStyle = "rgba(255,200,120,.25)"; g.fillRect(sh.x - 1, sh.y, 2, 18);
+    if (sh.vy > -h * 0.05) {
+      const n = sh.willow ? 70 : 90, sp = Math.min(w, h) * (sh.willow ? 0.18 : 0.26);
+      for (let i = 0; i < n && S.parts.length < 1400; i++) { const a = (i / n) * 6.28 + Math.random() * 0.1, v = sp * (0.6 + Math.random() * 0.4); S.parts.push({ x: sh.x, y: sh.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: sh.willow ? 2.8 : 1.7, max: sh.willow ? 2.8 : 1.7, col: sh.willow ? "#ffcf6a" : sh.col, drag: sh.willow ? 0.96 : 0.975 }); }
+      return false;
+    }
+    return true;
+  });
+  S.parts = S.parts.filter(p => {
+    p.vx *= p.drag; p.vy = p.vy * p.drag + h * 0.12 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
+    const a = Math.max(0, p.life / p.max);
+    g.globalAlpha = a; g.fillStyle = p.col; g.beginPath(); g.arc(p.x, p.y, 1.5 + a * 2.2, 0, 6.28); g.fill();
+    return p.life > 0;
+  });
+  g.restore();
+  // skyline
+  S.city.forEach(b => {
+    g.fillStyle = "#07040f"; g.fillRect(b.x, h - b.h, b.w, b.h);
+    let k = 0; g.fillStyle = "rgba(255,214,120,.55)";
+    for (let y = h - b.h + 8; y < h - 8; y += 16) for (let x = b.x + 6; x < b.x + b.w - 8; x += 12) { if (b.lit[k++]) g.fillRect(x, y, 4, 6); }
+  });
+  const haze = g.createLinearGradient(0, h * 0.7, 0, h); haze.addColorStop(0, "rgba(120,40,90,0)"); haze.addColorStop(1, "rgba(120,40,90,.25)");
+  g.fillStyle = haze; g.fillRect(0, h * 0.7, w, h * 0.3);
+}
+
+/* 8. Prosperity Rain: gold coins, ingots and red packets drift down over a red sunburst */
+function bgProsperity(g, w, h, dt, t) {
+  if (!bgState) {
+    const R = rng(12);
+    bgState = { items: Array.from({ length: Math.max(26, Math.round(w / 26)) }, () => {
+      const r = R();
+      return { x: R() * w, y: R() * h, v: 30 + R() * 60, rot: R() * 6.28, vr: (R() - 0.5) * 1.6, flip: R() * 6.28, fs: 1 + R() * 2, kind: r < 0.62 ? "coin" : r < 0.85 ? "ingot" : "packet", s: 10 + R() * 12, sway: R() * 6.28 };
+    }) };
+  }
+  const bg = g.createRadialGradient(w / 2, h * 0.45, 30, w / 2, h / 2, Math.max(w, h) * 0.8);
+  bg.addColorStop(0, "#c3242f"); bg.addColorStop(0.5, "#7d0a12"); bg.addColorStop(1, "#2e0408");
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  g.save(); g.translate(w / 2, h * 0.45); g.rotate(t * 0.03); g.fillStyle = "rgba(255,210,120,.06)";
+  for (let i = 0; i < 24; i++) { g.rotate(Math.PI / 12); g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.max(w, h), -40); g.lineTo(Math.max(w, h), 40); g.closePath(); g.fill(); }
+  g.restore();
+  g.strokeStyle = "rgba(245,200,76,.06)"; g.lineWidth = 1.5;
+  for (let y = 0; y < h + 60; y += 60) for (let x = (y / 60) % 2 ? 30 : 0; x < w + 60; x += 60) { g.beginPath(); g.arc(x, y, 30, 0, 6.28); g.stroke(); }
+  bgState.items.forEach(it => {
+    it.y += it.v * dt; it.rot += it.vr * dt; it.flip += it.fs * dt;
+    if (it.y > h + 40) { it.y = -40; it.x = Math.random() * w; }
+    const x = it.x + Math.sin(t * 0.8 + it.sway) * 16, s = it.s;
+    g.save(); g.translate(x, it.y); g.rotate(it.rot);
+    g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 6; g.shadowOffsetY = 3;
+    if (it.kind === "coin") {
+      g.scale(Math.max(0.15, Math.abs(Math.cos(it.flip))), 1);
+      g.beginPath(); g.arc(0, 0, s, 0, 6.28); g.fillStyle = metal(g, -s, -s, s, s, GOLD); g.fill(); g.shadowColor = "transparent";
+      g.strokeStyle = "rgba(120,80,10,.7)"; g.lineWidth = 1.5; g.beginPath(); g.arc(0, 0, s * 0.78, 0, 6.28); g.stroke();
+      g.fillStyle = "#7a0a10"; g.fillRect(-s * 0.26, -s * 0.26, s * 0.52, s * 0.52);
+    } else if (it.kind === "ingot") {
+      const k = s * 1.3;
+      g.beginPath(); g.moveTo(-k, -k * 0.15); g.quadraticCurveTo(-k * 1.05, -k * 0.6, -k * 0.6, -k * 0.35); g.quadraticCurveTo(0, -k * 0.95, k * 0.6, -k * 0.35); g.quadraticCurveTo(k * 1.05, -k * 0.6, k, -k * 0.15);
+      g.quadraticCurveTo(k * 0.8, k * 0.55, 0, k * 0.55); g.quadraticCurveTo(-k * 0.8, k * 0.55, -k, -k * 0.15); g.closePath();
+      g.fillStyle = metal(g, -k, -k, k, k, GOLD); g.fill(); g.shadowColor = "transparent";
+      g.beginPath(); g.ellipse(0, -k * 0.35, k * 0.35, k * 0.3, 0, 0, 6.28); g.fillStyle = metal(g, -k * 0.3, -k * 0.6, k * 0.3, 0, ["#fff3c4", "#f5c84c", "#d9a93c"]); g.fill();
+    } else {
+      g.scale(Math.max(0.2, Math.abs(Math.cos(it.flip * 0.6))), 1);
+      rr(g, -s * 0.75, -s, s * 1.5, s * 2, 3); g.fillStyle = "#d8262f"; g.fill(); g.shadowColor = "transparent";
+      g.strokeStyle = "#f5c84c"; g.lineWidth = 1.2; g.stroke();
+      g.beginPath(); g.arc(0, -s * 0.2, s * 0.32, 0, 6.28); g.fillStyle = "#f5c84c"; g.fill();
+    }
+    g.restore();
+  });
+}
+
+/* 9. Neon Grid: retro digital horizon, striped sun, moving grid */
+function bgNeon(g, w, h, dt, t) {
+  if (!bgState) { const R = rng(4); bgState = { stars: Array.from({ length: 110 }, () => ({ x: R() * w, y: R() * h * 0.5, z: R(), ph: R() * 6.28 })) }; }
+  const hz = h * 0.58;
+  const sky = g.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, "#07021a"); sky.addColorStop(0.7, "#2a0638"); sky.addColorStop(1, "#5a0f4a");
+  g.fillStyle = sky; g.fillRect(0, 0, w, hz);
+  bgState.stars.forEach(st => { g.fillStyle = `rgba(255,255,255,${0.2 + 0.5 * st.z * (0.6 + 0.4 * Math.sin(t * 1.5 + st.ph))})`; g.fillRect(st.x, st.y, 1 + st.z, 1 + st.z); });
+  // striped sun
+  const sr = Math.min(w, h) * 0.24, sx = w / 2, sy = hz - sr * 0.35;
+  g.save(); g.beginPath(); g.rect(0, 0, w, hz); g.clip();
+  g.shadowColor = "#ff3d8b"; g.shadowBlur = 60;
+  const sg = g.createLinearGradient(0, sy - sr, 0, sy + sr); sg.addColorStop(0, "#ffe07a"); sg.addColorStop(0.55, "#ff7a4d"); sg.addColorStop(1, "#ff2d95");
+  g.fillStyle = sg; g.beginPath(); g.arc(sx, sy, sr, 0, 6.28); g.fill(); g.shadowColor = "transparent";
+  g.fillStyle = "#3a0840";
+  for (let i = 0; i < 7; i++) { const yy = sy + sr * (0.05 + i * 0.14) + ((t * 6) % (sr * 0.14)), th = 2 + i * 1.6; g.fillRect(sx - sr, yy, sr * 2, th); }
+  g.restore();
+  // distant wireframe hills
+  g.strokeStyle = "rgba(255,90,220,.5)"; g.lineWidth = 1.5; g.beginPath();
+  for (let x = 0; x <= w; x += 12) { const y = hz - (Math.abs(Math.sin(x / 140)) * 40 + Math.abs(Math.sin(x / 57)) * 18); x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke();
+  // floor + grid
+  const fl = g.createLinearGradient(0, hz, 0, h); fl.addColorStop(0, "#1a0330"); fl.addColorStop(1, "#05010d");
+  g.fillStyle = fl; g.fillRect(0, hz, w, h - hz);
+  g.save(); g.strokeStyle = "#ff3dd6"; g.shadowColor = "#ff3dd6"; g.shadowBlur = 8; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(0, hz); g.lineTo(w, hz); g.stroke();
+  for (let i = -24; i <= 24; i++) { g.globalAlpha = 0.7; g.beginPath(); g.moveTo(sx + i * 20, hz); g.lineTo(sx + i * w * 0.16, h); g.stroke(); }
+  const ph = (t * 0.6) % 1;
+  for (let k = 0; k < 14; k++) { const z = (k + ph) / 14, y = hz + (h - hz) * z * z; g.globalAlpha = 0.25 + z * 0.7; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.restore();
+  const glow = g.createLinearGradient(0, hz - 40, 0, hz + 60); glow.addColorStop(0, "rgba(255,61,214,0)"); glow.addColorStop(0.5, "rgba(255,61,214,.18)"); glow.addColorStop(1, "rgba(255,61,214,0)");
+  g.fillStyle = glow; g.fillRect(0, hz - 40, w, 100);
+}
+
 function goatZones(w, h) {
   const box = (el) => { if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width && r.height ? r : null; };
-  const tr = box(document.querySelector("#show .mq")), br = box(document.querySelector("#show .mq-bot")), fr = box($("featWrap")), qr = box($("wallQr"));
+  const tr = box(document.querySelector("#show .mq")), br = box(document.querySelector("#show .mq-bot")), qr = box($("wallQr"));
+  const featEl = document.querySelector("#show .feat"), fw = featEl ? featEl.offsetWidth : 0;
   const y0 = tr ? tr.bottom + 6 : h * 0.2, y1 = br ? br.top - 6 : h * 0.8;
-  const cw = fr ? fr.width : Math.min(h * 0.5, w * 1.18) * 0.714;
+  const cw = fw || Math.min(h * 0.5, w * 1.18) * 0.714;
   const cl = w / 2 - cw / 2 - 28, cr = w / 2 + cw / 2 + 28;
   let ry1 = y1, rx1 = w - 12;
   if (qr && qr.top < y1 && qr.bottom > y0) { if (qr.top - y0 > (y1 - y0) * 0.55) ry1 = qr.top - 10; else rx1 = qr.left - 10; }
-  const fc = box(document.querySelector(".feat-cap"));
-  const under = fc ? { y0: fc.top, y1: fc.bottom, capL: w / 2 - Math.max(60, fc.width / 2) - 8, capR: w / 2 + Math.max(60, fc.width / 2) + 8 } : null;
+  const fcEl = document.querySelector(".feat-cap"), fc = box(fcEl), fcw = fcEl ? fcEl.offsetWidth : 0;
+  const under = fc ? { y0: fc.top, y1: fc.top + fcEl.offsetHeight, capL: w / 2 - Math.max(60, fcw / 2) - 8, capR: w / 2 + Math.max(60, fcw / 2) + 8 } : { y0: 0, y1: 0, capL: 0, capR: 0 };
   return { left: { x0: 12, x1: cl, y0, y1 }, right: { x0: cr, x1: rx1, y0, y1: ry1 }, under };
 }
 function bgGoat(g, w, h, dt, t) {
@@ -4059,8 +4242,12 @@ function bgGoat(g, w, h, dt, t) {
     g.save(); g.translate(lx, 0); g.rotate(sway); lantern(g, 0, h * 0.11, Math.min(w, h) * 0.028); g.restore();
   }
   // the goat and the monkey sit in the open space beside the centre card, between the card rows
-  if (!bgState.zones || t - bgState.zt > 1) { bgState.zones = goatZones(w, h); bgState.zt = t; }
-  const Z = bgState.zones, bob = Math.sin(t * 1.4) * 4;
+  if (!bgState.zones || t - bgState.zt > 0.5) { bgState.zones = goatZones(w, h); bgState.zt = t; }
+  if (!bgState.zs) bgState.zs = JSON.parse(JSON.stringify(bgState.zones));
+  const ease = Math.min(1, dt * 2.5);
+  const glide = (a, b) => { for (const key in b) { if (typeof b[key] === "object") glide(a[key], b[key]); else a[key] += (b[key] - a[key]) * ease; } };
+  glide(bgState.zs, bgState.zones);
+  const Z = bgState.zs, bob = Math.sin(t * 1.4) * 4;
   const fit = (z) => Math.min((z.x1 - z.x0) / 3.0, (z.y1 - z.y0) / 3.45, h * 0.2);
   const sL = fit(Z.left), sR = fit(Z.right), s = Math.min(sL, sR);
   if (s >= 26) {
