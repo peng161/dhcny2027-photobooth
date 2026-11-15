@@ -3436,7 +3436,7 @@ async function loadWall() {
   ids.slice().reverse().forEach(id => { if (!have.has(id)) grid.prepend(wallFigure(id)); });
   updateWallCount();
   if (!wallLoaded) {
-    const seen = DEMO ? new Set() : loadSeen(), unseen = ids.filter(id => !seen.has(id));
+    const seen = new Set(), unseen = ids.slice();   // every visit replays the booster opening with all the cards
     ids.forEach(id => { if (seen.has(id)) revealed.add(id); });
     if (unseen.length && wallMode === "show") setTimeout(() => megaOpen(unseen), 700);
     else { unseen.forEach(id => revealed.add(id)); markSeen(unseen); }
