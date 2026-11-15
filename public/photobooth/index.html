@@ -296,10 +296,10 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
 .pack-burst.go { animation: burst 1.1s ease-out; }
 @keyframes burst { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(9); } }
 .mega { position: absolute; inset: 14vh 3vw 20vh; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 12px; z-index: 3; pointer-events: none; }
-.mpack { position: relative; height: var(--mh); aspect-ratio: 1105 / 2000; animation: mp-in .55s cubic-bezier(.2,.9,.3,1.3) backwards; transition: transform .5s ease, opacity .5s ease; }
+.mpack { position: relative; height: var(--mh); aspect-ratio: 1105 / 2000; animation: mp-in .8s cubic-bezier(.2,.9,.3,1.3) backwards; transition: transform .8s ease, opacity .8s ease; }
 .mpack img { width: 100%; height: 100%; display: block; border-radius: 4px; box-shadow: 0 14px 30px rgba(0,0,0,.55); background: #5e0b13; }
 .mpack .mp-top { position: absolute; left: 0; right: 0; top: 0; height: 7%; background-size: 100% auto; background-repeat: no-repeat; background-position: top; border-radius: 4px 4px 0 0;
-  transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s; }
+  transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s; }
 .mpack.rip .mp-top { transform: translate(18%, -160%) rotate(24deg); opacity: 0; }
 .mpack.rip img { clip-path: inset(6.5% 0 0 0); box-shadow: 0 14px 30px rgba(0,0,0,.55), 0 -10px 40px 8px rgba(255,220,140,.8); }
 .mpack.done { transform: translateY(16px) scale(.86); opacity: .25; }
@@ -3289,8 +3289,8 @@ async function megaOpen(ids) {
   const stage = $("packStage"), cap = $("packCaption"), box = $("megaPacks"), cardsBox = $("packCards");
   const groups = []; for (let i = 0; i < ids.length; i += MEGA_PACK) groups.push(ids.slice(i, i + MEGA_PACK));
   const n = groups.length;
-  const per = Math.max(260, Math.min(1100, 7000 / n));           // whole opening stays around 8 seconds
-  const fly = Math.min(1700, per * 2 + 500);
+  const per = Math.max(700, Math.min(2400, 16000 / n));          // 1-6 packs: ~2.4s each; many packs: shorter, never rushed
+  const fly = Math.min(3200, per * 1.4 + 900);
   $("featWrap").style.visibility = "hidden"; document.querySelector(".feat-cap").style.visibility = "hidden";
   $("pack").style.display = "none"; cardsBox.innerHTML = ""; box.innerHTML = "";
   // size the packs so they all fit on screen
@@ -3299,14 +3299,14 @@ async function megaOpen(ids) {
   box.style.setProperty("--mh", `${Math.floor(mh)}px`);
   const arts = await Promise.all(groups.map(g => getPackArt(packKeyFor(g))));
   const packs = groups.map((g, i) => {
-    const p = document.createElement("div"); p.className = "mpack"; p.style.animationDelay = `${i * Math.min(60, 600 / n)}ms`;
+    const p = document.createElement("div"); p.className = "mpack"; p.style.animationDelay = `${i * Math.min(140, 1200 / n)}ms`;
     p.innerHTML = `<img alt=""><div class="mp-top"></div>`;
     if (arts[i]) { p.querySelector("img").src = arts[i]; p.querySelector(".mp-top").style.backgroundImage = `url("${arts[i]}")`; }
     box.append(p); return p;
   });
   cap.textContent = `📦 ${ids.length} card${ids.length === 1 ? "" : "s"} waiting · ${n} pack${n === 1 ? "" : "s"}`;
   stage.hidden = false;
-  await sleep(900 + Math.min(600, n * 40));
+  await sleep(1800 + Math.min(1000, n * 60));
   cap.textContent = "Opening…";
   const sr = stage.getBoundingClientRect();
   for (let i = 0; i < n; i++) {
@@ -3318,17 +3318,17 @@ async function megaOpen(ids) {
       const m = document.createElement("img"); m.className = "mcard"; m.alt = ""; m.src = cardSrc(id);
       const spread = (k - (groups[i].length - 1) / 2);
       m.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;--dx:${spread * cw * 0.32}px;--dy:${-r.height * 0.45 - Math.abs(spread) * 4}px;--r:${spread * 7}deg;` +
-        `--ex:${(Math.random() - 0.5) * innerWidth * 0.8}px;--ey:${innerHeight * 0.5 - cy + sr.top}px;--d:${fly}ms;animation-delay:${k * Math.min(40, per / 12)}ms`;
+        `--ex:${(Math.random() - 0.5) * innerWidth * 0.8}px;--ey:${innerHeight * 0.5 - cy + sr.top}px;--d:${fly}ms;animation-delay:${k * Math.min(110, per / 14)}ms`;
       cardsBox.append(m); setTimeout(() => m.remove(), fly + 900);
     });
-    setTimeout(() => p.classList.add("done"), Math.min(per, 700));
+    setTimeout(() => p.classList.add("done"), Math.min(per * 0.85, 1600));
     await sleep(per);
   }
-  await sleep(Math.min(1200, fly * 0.7));
+  await sleep(Math.min(2400, fly * 0.9));
   ids.forEach(id => revealed.add(id)); markSeen(ids);
   refreshShow(false);
   cap.textContent = `✨ ${ids.length} card${ids.length === 1 ? "" : "s"} revealed!`;
-  await sleep(1500);
+  await sleep(2500);
   stage.hidden = true; box.innerHTML = ""; cardsBox.innerHTML = ""; cap.textContent = "";
   $("pack").style.display = ""; $("featWrap").style.visibility = ""; document.querySelector(".feat-cap").style.visibility = "";
   packPlaying = false; holdUntil = 0;
