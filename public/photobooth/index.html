@@ -4027,6 +4027,16 @@ function papercutMedallion(g, x, y, r) {
   for (let i = 0; i < 16; i++) { g.save(); g.rotate((i / 16) * Math.PI * 2); g.beginPath(); g.ellipse(0, -r * 0.82, r * 0.06, r * 0.12, 0, 0, Math.PI * 2); g.stroke(); g.restore(); }
   g.restore();
 }
+function goatZones(w, h) {
+  const box = (el) => { if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width && r.height ? r : null; };
+  const tr = box(document.querySelector("#show .mq")), br = box(document.querySelector("#show .mq-bot")), fr = box($("featWrap")), qr = box($("wallQr"));
+  const y0 = tr ? tr.bottom + 6 : h * 0.2, y1 = br ? br.top - 6 : h * 0.8;
+  const cw = fr ? fr.width : Math.min(h * 0.5, w * 1.18) * 0.714;
+  const cl = w / 2 - cw / 2 - 28, cr = w / 2 + cw / 2 + 28;
+  let ry1 = y1, rx1 = w - 12;
+  if (qr && qr.top < y1 && qr.bottom > y0) { if (qr.top - y0 > (y1 - y0) * 0.55) ry1 = qr.top - 10; else rx1 = qr.left - 10; }
+  return { left: { x0: 12, x1: cl, y0, y1 }, right: { x0: cr, x1: rx1, y0, y1: ry1 } };
+}
 function bgGoat(g, w, h, dt, t) {
   if (!bgState) {
     const R = rng(27);
@@ -4044,16 +4054,30 @@ function bgGoat(g, w, h, dt, t) {
     const lx = (i + 0.5) * (w / n), sway = Math.sin(t * 0.9 + i) * 0.05;
     g.save(); g.translate(lx, 0); g.rotate(sway); lantern(g, 0, h * 0.11, Math.min(w, h) * 0.028); g.restore();
   }
-  // the goat and the monkey face each other
-  const s = Math.min(w * 0.11, h * 0.17), cy = h * 0.55, bob = Math.sin(t * 1.4) * 4;
-  papercutMedallion(g, w * 0.16, cy, s * 1.55);
-  papercutMedallion(g, w * 0.84, cy, s * 1.55);
-  papercutGoat(g, w * 0.155, cy + s * 0.15 + bob, s * 0.95, 1);
-  papercutMonkey(g, w * 0.845, cy - s * 0.25 - bob, s * 0.95, -1);
-  g.fillStyle = "#f5c84c"; g.textAlign = "center"; g.font = `700 ${Math.round(s * 0.36)}px ${CJK}`;
-  g.fillText("羊年大吉", w * 0.16, cy + s * 1.95);
-  g.font = `800 ${Math.round(s * 0.2)}px ${CF}`; g.fillText("ONE DH · CNY 2027", w * 0.84, cy + s * 1.9);
-  g.textAlign = "left";
+  // the goat and the monkey sit in the open space beside the centre card, between the card rows
+  if (!bgState.zones || t - bgState.zt > 1) { bgState.zones = goatZones(w, h); bgState.zt = t; }
+  const Z = bgState.zones, bob = Math.sin(t * 1.4) * 4;
+  const fit = (z) => Math.min((z.x1 - z.x0) / 3.0, (z.y1 - z.y0) / 3.45, h * 0.2);
+  const sL = fit(Z.left), sR = fit(Z.right), s = Math.min(sL, sR);
+  if (s >= 26) {
+    const gx = (Z.left.x0 + Z.left.x1) / 2, gy = (Z.left.y0 + Z.left.y1) / 2 - s * 0.22;
+    const mx = (Z.right.x0 + Z.right.x1) / 2, my = (Z.right.y0 + Z.right.y1) / 2 - s * 0.22;
+    papercutMedallion(g, gx, gy, s * 1.4); papercutMedallion(g, mx, my, s * 1.4);
+    papercutGoat(g, gx - s * 0.03, gy + s * 0.15 + bob, s * 0.95, 1);
+    papercutMonkey(g, mx + s * 0.03, my - s * 0.25 - bob, s * 0.95, -1);
+    g.fillStyle = "#f5c84c"; g.textAlign = "center"; g.font = `700 ${Math.round(s * 0.36)}px ${CJK}`;
+    g.fillText("羊年大吉", gx, gy + s * 1.78);
+    g.font = `800 ${Math.round(s * 0.2)}px ${CF}`; g.fillText("ONE DH · CNY 2027", mx, my + s * 1.72);
+    g.textAlign = "left";
+  } else {
+    // phones: no free space beside the card, so the pair becomes a large soft watermark that shows between the cards
+    const ws = Math.min(w * 0.2, h * 0.11), cy = h * 0.5;
+    g.save(); g.globalAlpha = 0.5;
+    papercutMedallion(g, w * 0.27, cy - ws * 2.2, ws * 1.55); papercutMedallion(g, w * 0.73, cy + ws * 2.2, ws * 1.55);
+    papercutGoat(g, w * 0.26, cy - ws * 2.05 + bob, ws * 0.95, 1);
+    papercutMonkey(g, w * 0.74, cy + ws * 1.95 - bob, ws * 0.95, -1);
+    g.restore();
+  }
   // drifting plum-blossom petals
   bgState.petals.forEach(p => {
     p.y += p.v * dt; p.r += dt; if (p.y > h + 10) { p.y = -10; p.x = Math.random() * w; }
