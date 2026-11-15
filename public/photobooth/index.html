@@ -210,6 +210,7 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) {
   .make-card { position: fixed; right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 8;
     width: 50px; height: 50px; padding: 0 !important; display: grid; place-items: center; font-size: 22px !important; line-height: 1;
     border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,.55), 0 0 0 2px rgba(255,230,170,.35); }
+  .make-card .card-ico { width: 26px; height: 26px; }
   #wall.show-mode .show { padding-top: 54px; }
   #wall:not(.show-mode) .wall-grid { padding-bottom: 80px; }
 }
@@ -422,6 +423,8 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
   .p-sheet { display: grid; grid-template-columns: repeat(3, 2.5in); grid-auto-rows: 3.5in; gap: 0; justify-content: center; align-content: start; }
   .p-sheet img { width: 2.5in; height: 3.5in; outline: 0.5pt dashed #bbb; outline-offset: -0.25pt; }
 }
+.card-ico { width: 1.15em; height: 1.15em; vertical-align: -0.2em; }
+.make-card { display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
 </style>
 </head>
 <body>
@@ -633,7 +636,7 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
     <button class="btn" id="printAllBtn" type="button" hidden>🖨 Print all</button>
     <button class="btn" id="bgBtn" type="button">🎨 Background</button>
     <button class="btn" id="fullBtn" type="button">⛶ Full screen</button>
-    <a class="btn primary make-card" href="#" aria-label="Make your card" title="Make your card">📷<span class="lbl"> Make your card</span></a>
+    <a class="btn primary make-card" href="#" aria-label="Make your card" title="Make your card"><svg class="card-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8.5v7M8.5 12h7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="lbl"> Make your card</span></a>
   </div>
   <div class="wall-grid" id="wallGrid"></div>
   <div class="empty" id="wallEmpty" hidden>No cards yet. Make yours and tap <b>Post to Card Wall</b>.</div>
