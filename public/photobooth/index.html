@@ -207,6 +207,8 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) {
 #wall.show-mode .wall-head { transition: opacity .5s; }
 /* Phones and small screens: one compact row of icon buttons, and an always-visible "Make your card" button */
 @media (max-width: 700px), (pointer: coarse) and (max-width: 900px) {
+  .show[data-bg="goat"] .feat { height: min(41vh, 100vw); }
+  .show[data-bg="goat"] .feat-cap { min-height: 86px; max-width: 52vw; flex-wrap: wrap; justify-content: center; text-align: center; gap: 2px 10px; font-size: 14px; }
   .wall-head { flex-wrap: nowrap; gap: 6px; }
   .wall-head h1 { font-size: clamp(16px, 5vw, 22px); white-space: nowrap; }
   .wall-head #wallCount { display: none; }
@@ -4035,7 +4037,9 @@ function goatZones(w, h) {
   const cl = w / 2 - cw / 2 - 28, cr = w / 2 + cw / 2 + 28;
   let ry1 = y1, rx1 = w - 12;
   if (qr && qr.top < y1 && qr.bottom > y0) { if (qr.top - y0 > (y1 - y0) * 0.55) ry1 = qr.top - 10; else rx1 = qr.left - 10; }
-  return { left: { x0: 12, x1: cl, y0, y1 }, right: { x0: cr, x1: rx1, y0, y1: ry1 } };
+  const fc = box(document.querySelector(".feat-cap"));
+  const under = fc ? { y0: fc.top, y1: fc.bottom, capL: w / 2 - Math.max(60, fc.width / 2) - 8, capR: w / 2 + Math.max(60, fc.width / 2) + 8 } : null;
+  return { left: { x0: 12, x1: cl, y0, y1 }, right: { x0: cr, x1: rx1, y0, y1: ry1 }, under };
 }
 function bgGoat(g, w, h, dt, t) {
   if (!bgState) {
@@ -4069,8 +4073,15 @@ function bgGoat(g, w, h, dt, t) {
     g.fillText("羊年大吉", gx, gy + s * 1.78);
     g.font = `800 ${Math.round(s * 0.2)}px ${CF}`; g.fillText("ONE DH · CNY 2027", mx, my + s * 1.72);
     g.textAlign = "left";
+  } else if (Z.under && Math.min((Z.under.y1 - Z.under.y0) / 3.0, (Z.under.capL - 10) / 3.0) >= 14) {
+    // phones: the goat and monkey flank the caption in the strip under the centre card
+    const U = Z.under, ps = Math.min((U.y1 - U.y0) / 3.0, (U.capL - 10) / 3.0, 34), cy = (U.y0 + U.y1) / 2;
+    const gx = (10 + U.capL) / 2, mx = (U.capR + w - 10) / 2, pb = Math.sin(t * 1.4) * 2;
+    papercutMedallion(g, gx, cy, ps * 1.42); papercutMedallion(g, mx, cy, ps * 1.42);
+    papercutGoat(g, gx - ps * 0.03, cy + ps * 0.15 + pb, ps * 0.95, 1);
+    papercutMonkey(g, mx + ps * 0.03, cy - ps * 0.25 - pb, ps * 0.95, -1);
   } else {
-    // phones: no free space beside the card, so the pair becomes a large soft watermark that shows between the cards
+    // no room at all: the pair becomes a large soft watermark that shows between the cards
     const ws = Math.min(w * 0.2, h * 0.11), cy = h * 0.5;
     g.save(); g.globalAlpha = 0.5;
     papercutMedallion(g, w * 0.27, cy - ws * 2.2, ws * 1.55); papercutMedallion(g, w * 0.73, cy + ws * 2.2, ws * 1.55);
