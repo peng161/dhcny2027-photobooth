@@ -158,8 +158,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .gallery figure.selected img { outline: 3px solid var(--accent); outline-offset: 2px; }
 .empty { color: var(--muted); font-size: 13px; padding: 18px; border: 1px dashed var(--line); border-radius: 10px; text-align: center; }
 
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; font-weight: 600; z-index: 50; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast { max-width: calc(100vw - 32px); width: max-content; text-align: center; position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; opacity: 0; transition: .25s; pointer-events: none; font-weight: 600; z-index: 50; }
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* Booth mode: guests only see camera, card, name and big buttons */
 /* Staff view (default): one path only. Organiser settings live at #admin */
@@ -4372,7 +4372,7 @@ $("e-admin").addEventListener("input", (e) => ls.set("dh-admin", e.target.value.
 
 /* ---------- Misc UI ---------- */
 let tt;
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2200); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("on"), 2600); }
 function setBooth(on) { document.body.classList.toggle("booth", on); }
 const routeView = () => {
   const h = location.hash;
