@@ -118,6 +118,12 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .design-name { text-align: center; display: grid; gap: 6px; justify-items: center; }
 .design-name b { font-family: var(--font-display); font-size: 17px; }
 .dots { display: flex; gap: 6px; }
+.swatches { display: grid; grid-template-columns: repeat(10, 30px); gap: 8px; justify-content: center; margin: 4px auto 0; }
+@media (max-width: 420px) { .swatches { grid-template-columns: repeat(5, 36px); gap: 10px 14px; } }
+.swatches button { width: 100%; aspect-ratio: 1; border-radius: 50%; padding: 0; cursor: pointer; background: var(--sw);
+  border: 2px solid rgba(255,255,255,.75); box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.3); transition: transform .15s; }
+.swatches button[aria-checked="true"] { box-shadow: 0 0 0 3px var(--accent), 0 2px 8px rgba(0,0,0,.4); transform: scale(1.12); }
+.dots { font-size: 13px; color: var(--muted, #9a948a); font-weight: 600; }
 .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
 .dots i.on { background: var(--accent); }
 .btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -490,7 +496,8 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
       <div class="design-name"><b id="designName"></b><span class="dots" id="designDots"></span></div>
       <button class="btn" id="nextDesign" type="button" aria-label="Next design">›</button>
     </div>
-    <p class="hint" id="hint">Swipe the card to change the design</p>
+    <div class="swatches" id="colorRow" role="radiogroup" aria-label="Colour theme"></div>
+    <p class="hint" id="hint">Swipe the card left or right for a new design · tap a colour below</p>
     <div class="row" id="adjustRow" hidden>
       <button class="btn" id="panBtn" type="button" aria-pressed="false">✋ Move photo</button>
       <label class="field grow">Zoom <input type="range" id="zoom" min="1" max="3" step="0.01" value="1"></label>
@@ -720,20 +727,114 @@ const CYAN   = ["#b5f1ff", "#2fb4e0", "#e6fbff", "#1a86b8", "#7fe0ff"];
 const BLACK  = ["#4a4650", "#141217", "#5f5a66", "#0b0a0d", "#2c2930"];
 const ICE = ["#f4f9ff", "#b9d3f0", "#ffffff", "#9fb8e0", "#e6dcff"];
 const JADE = ["#9fe0c4", "#2f8f6e", "#c9f2df", "#1d6b52", "#6cc7a0"];
+const ROSE = ["#ffd9d2", "#c9806f", "#ffeee9", "#9a5a4c", "#e8a898"];
+const AMETHYST = ["#efe2ff", "#8e6cc9", "#f8f2ff", "#6a4aa0", "#c3a8ef"];
+const MAGENTA = ["#ffc2ef", "#d0329e", "#ffe6f8", "#9c1474", "#ff7ad2"];
+const LIME = ["#e4ffb0", "#7cc91c", "#f4ffd9", "#4e8f0a", "#b6f23a"];
+const PORCELAIN = ["#eef3ff", "#3a5fb0", "#ffffff", "#24407e", "#9db4e8"];
+const BLUEBAND = ["#9fe6ff", "#2fb4e0", "#d6f6ff", "#1a86b8", "#5fd0f5"];
+const PINKBAND = ["#ffb3d6", "#ff4f9a", "#ffd9ea", "#d02a75", "#ff7ab5"];
 const DESIGNS = {
   strike:   { name: "One DSTA Holo", badge: "hex",      layout: "strike",  frame: SILVER, trim: YELLOW, orn: null,  seal: false, monkey: "right", prop: "laptop" },
   illus:    { name: "Illustration Art", badge: "glass",   layout: "illus",   frame: SILVER, trim: SILVER, orn: null,  seal: false, monkey: "off",   prop: "laptop" },
   goldhr:   { name: "Gold Hyper Rare", badge: "coin",    layout: "full",    frame: GOLD,   trim: GOLD,   orn: "goldfoil", seal: false, monkey: "right", prop: "packet", tint: "#6e4a10" },
   fortune:  { name: "Fortune Squad", badge: "chop",      layout: "poster",  frame: GOLD,   trim: GOLD,   orn: "cny", seal: false, monkey: "right", prop: "packet" },
+  blueprint:{ name: "Blueprint", badge: "glass",         layout: "blueprint", frame: SILVER, trim: SILVER, seal: false, monkey: "off", prop: "laptop",
+              bp: { bg: "#1d4f9c", bg2: "#0e2e66", line: "#d6e6ff" } },
   lunar:    { name: "Lunar Full Art", badge: "lacquer",     layout: "full",    frame: GOLD,   trim: GOLD,   orn: "cny", seal: true,  monkey: "right", prop: "packet" },
+  cover:    { name: "Magazine Cover", badge: "coin",     layout: "cover",   frame: SILVER, trim: SILVER, seal: false, monkey: "off", prop: "laptop",
+              cv: { mast: "#e3262f", mastInk: "#ffffff" } },
   crimson:  { name: "One DSTA Crimson", badge: "hexgold",   layout: "strike",  frame: GOLD,   trim: GOLD,   orn: null,  seal: false, monkey: "right", prop: "packet",
               accent: "#f5c84c", ink: "rgba(70,6,14,.9)", band: ["#fff1b0", "#d9a93c", "#fff7d6", "#b8862a", "#f5d77a"] },
+  stamp:    { name: "Postage Stamp", badge: "chop",      layout: "stamp",   frame: SILVER, trim: SILVER, seal: false, monkey: "off", prop: "packet",
+              st: { bg: "#b8232b", paper: "#fbf6ea", ink: "#7a1016" } },
   lantern:  { name: "Lantern Night", badge: "lantern",      layout: "illus",   frame: GOLD,   trim: GOLD,   orn: "cny", seal: false, monkey: "off",   prop: "packet", leak: "#ff6a3d" },
+  polaroid: { name: "Polaroid", badge: "orb",            layout: "polaroid", frame: SILVER, trim: SILVER, seal: false, monkey: "off", prop: "laptop",
+              pl: { bg1: "#c9a77a", bg2: "#a3805a" } },
   crystal:  { name: "Crystal Tera", badge: "crystal",       layout: "full",    frame: ICE,    trim: ICE,    orn: "crystal", seal: false, monkey: "right", prop: "laptop" },
-  fortunej: { name: "Fortune Squad Jade", badge: "chopjade", layout: "poster",  frame: GOLD,   trim: GOLD,   orn: "cny", seal: false, monkey: "right", prop: "packet",
-              poster: { bg: ["#1f8a6a", "#11604a", "#073428"], deep: "#05261d", ink: "#0d4a37" } },
+  scroll:   { name: "Ink Scroll", badge: "chop",         layout: "scroll",  frame: GOLD, trim: GOLD, seal: false, monkey: "off", prop: "packet",
+              sc: { paper: "#f3ead6", ink: "#1d1a17", seal: "#c0262d" } },
+  neon:     { name: "Neon Circuit", badge: "crystal",    layout: "full",    frame: BLACK,  trim: CYAN,   orn: "tech", seal: false, monkey: "off", prop: "laptop", tint: "#04141c", neon: "#7fe0ff" },
+  deco:     { name: "Art Deco", badge: "hexgold",        layout: "deco",    frame: GOLD, trim: GOLD, seal: false, monkey: "off", prop: "packet",
+              dc: { bg: "#0b0a09", bg2: "#221d17", metal: GOLD, ink: "#f5d27a" } },
   classic:  { name: "Classic Holo", badge: "orb",       layout: "classic", frame: YELLOW, trim: SILVER, orn: null,  seal: false, monkey: "right", prop: "laptop" },
+  jade:     { name: "Jade Dynasty", badge: "chopjade",   layout: "full",    frame: JADE,   trim: GOLD,   orn: "cny", seal: false, monkey: "off", prop: "packet", tint: "#0d3b2e" },
+  midnight: { name: "Midnight Gold", badge: "coin",      layout: "full",    frame: BLACK,  trim: GOLD,   orn: "gold", seal: false, monkey: "off", prop: "packet", tint: "#0b0a0d" },
+  plum:     { name: "Plum Blossom", badge: "lacquer",    layout: "illus",   frame: ROSE,   trim: ROSE,   orn: "petals", seal: false, monkey: "off", prop: "packet", leak: "#ff9ecb", petal: "#ffb3cf" },
+  redpacket:{ name: "Red Packet", badge: "lacquer",      layout: "classic", frame: RED,    trim: GOLD,   orn: "cny", seal: true, monkey: "off", prop: "packet" },
 };
+/* Colour themes: the first entry is the design's own look; the rest override its colours */
+const COLORS = {
+  strike:   [{ n: "Yellow", sw: "#ffd31a" }, { n: "Electric blue", sw: "#2fb4e0", band: BLUEBAND, accent: "#5fd0f5" }, { n: "Hot pink", sw: "#ff4f9a", band: PINKBAND, accent: "#ff7ab5" }, { n: "Lime", sw: "#7cc91c", band: LIME, accent: "#b6f23a" }],
+  illus:    [{ n: "Cluster colour", sw: "#c9abf0" }, { n: "Sunset", sw: "#ff7a3d", leak: "#ff7a3d" }, { n: "Ocean", sw: "#3db8ff", leak: "#3db8ff" }, { n: "Gold", sw: "#e3b54f", leak: "#ffcf6a", frame: GOLD, trim: GOLD }],
+  goldhr:   [{ n: "Gold", sw: "#d9a93c" }, { n: "Rose gold", sw: "#c9806f", frame: ROSE, trim: ROSE, tint: "#6e2a3a", orn: "gold" }, { n: "Platinum", sw: "#b5bcc4", frame: SILVER, trim: SILVER, tint: "#2e3540", orn: null }],
+  fortune:  [{ n: "Crimson", sw: "#c3242f" }, { n: "Jade", sw: "#1f8a6a", badge: "chopjade", poster: { bg: ["#1f8a6a", "#11604a", "#073428"], deep: "#05261d", ink: "#0d4a37" } },
+             { n: "Midnight", sw: "#2a4a9a", poster: { bg: ["#2a4a9a", "#15296a", "#081538"], deep: "#050d26", ink: "#0b1d4d" } }, { n: "Plum", sw: "#8a2a7a", poster: { bg: ["#8a2a7a", "#5e1656", "#300a2c"], deep: "#22061f", ink: "#4d0b44" } }],
+  blueprint:[{ n: "Blueprint", sw: "#1d4f9c" }, { n: "Graphite", sw: "#3a3f47", bp: { bg: "#3d434c", bg2: "#1d2126", line: "#e8ecf0" } }, { n: "Green screen", sw: "#13553f", bp: { bg: "#145a43", bg2: "#08301f", line: "#c9f5df" } }, { n: "Red line", sw: "#8e1c22", bp: { bg: "#93222a", bg2: "#4f0a10", line: "#ffe0d6" } }],
+  lunar:    [{ n: "Cluster colour", sw: "#d9a93c" }, { n: "Imperial red", sw: "#8a0b12", tint: "#8a0b12" }, { n: "Midnight", sw: "#101a3a", tint: "#101a3a" }, { n: "Jade", sw: "#0f5a44", tint: "#0f5a44" }],
+  cover:    [{ n: "Red", sw: "#e3262f" }, { n: "Yellow", sw: "#ffd31a", cv: { mast: "#ffd31a", mastInk: "#1a1400" } }, { n: "White", sw: "#ffffff", cv: { mast: "#ffffff", mastInk: "#111111" } }, { n: "Teal", sw: "#19c3b1", cv: { mast: "#19c3b1", mastInk: "#04201d" } }],
+  crimson:  [{ n: "Crimson", sw: "#7a0b16" }, { n: "Midnight", sw: "#0a1230", ink: "rgba(8,14,40,.9)" }, { n: "Jade", sw: "#0b4a37", ink: "rgba(4,48,36,.9)" }, { n: "Royal purple", sw: "#3a0f5a", ink: "rgba(40,10,62,.9)" }],
+  stamp:    [{ n: "Red", sw: "#b8232b" }, { n: "Teal", sw: "#16797a", st: { bg: "#16797a", paper: "#f6f8f2", ink: "#0c4a4b" } }, { n: "Mustard", sw: "#d79a1e", st: { bg: "#c98d16", paper: "#fdf8ec", ink: "#6a4806" } }, { n: "Navy", sw: "#22356e", st: { bg: "#22356e", paper: "#f7f6f1", ink: "#18265a" } }],
+  lantern:  [{ n: "Lantern glow", sw: "#ff6a3d" }, { n: "Moonlight", sw: "#8fb8ff", leak: "#8fb8ff", frame: SILVER, trim: SILVER }, { n: "Plum", sw: "#d46bff", leak: "#d46bff" }, { n: "Jade", sw: "#38d39f", leak: "#38d39f" }],
+  polaroid: [{ n: "Kraft", sw: "#c9a77a" }, { n: "Chalkboard", sw: "#2f4a3a", pl: { bg1: "#36523f", bg2: "#1d3226", dark: true } }, { n: "Blush", sw: "#f0c3c9", pl: { bg1: "#f3cdd2", bg2: "#e2a8b2" } }, { n: "Denim", sw: "#3d5a80", pl: { bg1: "#46648c", bg2: "#2a405f", dark: true } }],
+  crystal:  [{ n: "Ice", sw: "#b9d3f0" }, { n: "Amethyst", sw: "#8e6cc9", frame: AMETHYST, trim: AMETHYST, tint: "#3e2470" }, { n: "Aqua", sw: "#2fb4e0", frame: CYAN, trim: CYAN, tint: "#0f5a70" }, { n: "Rose quartz", sw: "#e8a898", frame: ROSE, trim: ROSE, tint: "#6e2a44" }],
+  scroll:   [{ n: "Ink", sw: "#1d1a17" }, { n: "Indigo", sw: "#25356a", sc: { paper: "#edf0f6", ink: "#1d2a4f", seal: "#c0262d" } }, { n: "Vermilion", sw: "#a8321e", sc: { paper: "#f7e9d9", ink: "#5a1a10", seal: "#b8262c" } }, { n: "Night", sw: "#26232b", sc: { paper: "#1f1d22", ink: "#efe6d2", seal: "#d4343b", dark: true } }],
+  neon:     [{ n: "Cyan", sw: "#2fb4e0" }, { n: "Magenta", sw: "#ff4fc8", trim: MAGENTA, neon: "#ff6ad5", tint: "#1c0420" }, { n: "Lime", sw: "#a6ff4d", trim: LIME, neon: "#a6ff4d", tint: "#0b1a04" }, { n: "Amber", sw: "#ffb84d", trim: GOLD, neon: "#ffb84d", tint: "#1c1004" }],
+  deco:     [{ n: "Black & gold", sw: "#141210" }, { n: "Emerald", sw: "#0d4a3a", dc: { bg: "#06241c", bg2: "#0f4a3a", metal: GOLD, ink: "#f5d27a" } }, { n: "Navy & silver", sw: "#14234d", dc: { bg: "#060c1f", bg2: "#16264f", metal: SILVER, ink: "#e6ebf2" } }, { n: "Burgundy", sw: "#5a1020", dc: { bg: "#22060c", bg2: "#4f1120", metal: GOLD, ink: "#f5d27a" } }],
+  classic:  [{ n: "Yellow", sw: "#f4c800" }, { n: "Silver", sw: "#b5bcc4", frame: SILVER }, { n: "Gold", sw: "#d9a93c", frame: GOLD, trim: GOLD }, { n: "Black", sw: "#141217", frame: BLACK }],
+  jade:     [{ n: "Jade", sw: "#2f8f6e" }, { n: "Lacquer red", sw: "#b3121b", frame: RED, tint: "#4a060c", badge: "chop" }, { n: "Porcelain", sw: "#3a5fb0", frame: PORCELAIN, trim: SILVER, tint: "#0e2350", badge: "glass" }],
+  midnight: [{ n: "Gold", sw: "#d9a93c" }, { n: "Silver", sw: "#b5bcc4", trim: SILVER, badge: "glass" }, { n: "Rose gold", sw: "#c9806f", trim: ROSE }],
+  plum:     [{ n: "Blush", sw: "#ff9ecb" }, { n: "Snow", sw: "#eef1f4", frame: SILVER, trim: SILVER, leak: "#ffe7c2", petal: "#ffffff" }, { n: "Gold", sw: "#d9a93c", frame: GOLD, trim: GOLD, leak: "#ffcf6a", petal: "#ffd0dc" }],
+  redpacket:[{ n: "Red", sw: "#d72a2a" }, { n: "Gold", sw: "#d9a93c", frame: GOLD }, { n: "Black", sw: "#141217", frame: BLACK }],
+};
+/* Ten shared colour themes, mapped onto each layout's own colour slots. Hand-tuned colours above come first. */
+const THEMES = [
+  { n: "Imperial red", sw: "#c3242f", main: "#c3242f", dark: "#8a0f18", deep: "#3e050b", light: "#ff8a7a", accent: "#ff5a4f", metal: RED, neon: "#ff5a5a", paper: "#f8e7e1", alias: ["red", "crimson", "lacquer"] },
+  { n: "Imperial gold", sw: "#d9a93c", main: "#c99a2e", dark: "#7a5a12", deep: "#2e2105", light: "#ffd98a", accent: "#f5c84c", metal: GOLD, neon: "#ffc84d", paper: "#f7eed8", alias: ["gold", "mustard", "amber", "yellow"] },
+  { n: "Jade", sw: "#1f8a6a", main: "#1f8a6a", dark: "#11604a", deep: "#04241b", light: "#8fe8c4", accent: "#38d39f", metal: JADE, neon: "#4dffb8", paper: "#e7f3ec", alias: ["jade", "emerald", "green", "lime"] },
+  { n: "Midnight blue", sw: "#2a4a9a", main: "#2a4a9a", dark: "#15296a", deep: "#040b22", light: "#9fb8ff", accent: "#6f9bff", metal: NAVY, neon: "#6fa0ff", paper: "#e8ecf6", alias: ["midnight", "navy", "indigo", "blue", "denim", "porcelain"] },
+  { n: "Royal purple", sw: "#6a3aa8", main: "#6a3aa8", dark: "#3f1f6e", deep: "#17092b", light: "#c9a8ff", accent: "#b48bff", metal: AMETHYST, neon: "#c48bff", paper: "#efe8f7", alias: ["purple", "plum", "amethyst", "magenta"] },
+  { n: "Rose", sw: "#d0607a", main: "#d0607a", dark: "#8e3046", deep: "#360d1a", light: "#ffb3c6", accent: "#ff7fa0", metal: ROSE, neon: "#ff8fb5", paper: "#f9e8ec", alias: ["rose", "blush", "pink"] },
+  { n: "Ocean teal", sw: "#16797a", main: "#16797a", dark: "#0c4a4b", deep: "#032021", light: "#8fe0e0", accent: "#2fd0c8", metal: CYAN, neon: "#5ff0ff", paper: "#e4f2f1", alias: ["teal", "ocean", "aqua", "cyan"] },
+  { n: "Platinum", sw: "#b5bcc4", main: "#7d858e", dark: "#454c55", deep: "#191d22", light: "#e6ebf0", accent: "#dfe5ec", metal: SILVER, neon: "#e8f0ff", paper: "#f1f2f3", alias: ["silver", "platinum", "snow", "ice", "moonlight", "white"] },
+  { n: "Onyx", sw: "#1c1a1f", main: "#3a3640", dark: "#1c1a1f", deep: "#070608", light: "#cfc6d6", accent: "#f5c84c", metal: BLACK, neon: "#f5c84c", paper: "#ece8e2", alias: ["onyx", "black", "graphite", "night", "ink"] },
+  { n: "Sunrise", sw: "#e0702a", main: "#e0702a", dark: "#a2461a", deep: "#3e1706", light: "#ffc08a", accent: "#ff9a3d", metal: ["#ffd2a8", "#e0702a", "#ffe6cc", "#a2461a", "#f5a05f"], neon: "#ffa04d", paper: "#faeee2", alias: ["sunset", "sunrise", "orange"] },
+  { n: "Spring green", sw: "#6aa82a", main: "#5f9a26", dark: "#3c6a14", deep: "#132605", light: "#c9f29a", accent: "#a6e05a", metal: LIME, neon: "#b6ff6a", paper: "#eef5e2", alias: ["spring"] },
+];
+function themeFor(key, D, th) {
+  const lum = (h) => (0.299 * parseInt(h.slice(1, 3), 16) + 0.587 * parseInt(h.slice(3, 5), 16) + 0.114 * parseInt(h.slice(5, 7), 16)) / 255;
+  const rgba = (h, a) => `rgba(${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)},${a})`;
+  const lightMetal = th.metal === BLACK ? GOLD : th.metal === NAVY ? SILVER : th.metal;
+  switch (D.layout) {
+    case "strike": return key === "crimson" ? { ink: rgba(th.deep, 0.92) } : { band: lightMetal, accent: th.accent };
+    case "illus": return { leak: th.light, frame: th.metal, trim: th.metal, petal: th.light };
+    case "full": return key === "neon" ? { trim: lightMetal, neon: th.neon, tint: th.deep }
+      : { tint: th.deep, frame: th.metal, trim: key === "jade" || key === "midnight" ? lightMetal : th.metal, ...(key === "goldhr" ? { orn: th.metal === GOLD ? "goldfoil" : "gold" } : {}) };
+    case "poster": return { poster: { bg: [th.main, th.dark, th.deep], deep: th.deep, ink: th.dark } };
+    case "classic": return { frame: th.metal, trim: key === "redpacket" ? GOLD : D.trim };
+    case "blueprint": return { bp: { bg: th.dark, bg2: th.deep, line: th.paper } };
+    case "cover": return { cv: { mast: th.accent, mastInk: lum(th.accent) > 0.6 ? "#111111" : "#ffffff" } };
+    case "stamp": return { st: { bg: th.main, paper: th.paper, ink: th.deep } };
+    case "polaroid": return { pl: { bg1: th.main, bg2: th.dark, dark: lum(th.main) < 0.55 } };
+    case "scroll": return { sc: { paper: th.paper, ink: th.deep, seal: "#c0262d" } };
+    case "deco": return { dc: { bg: th.deep, bg2: th.dark, metal: lightMetal, ink: th.light } };
+  }
+  return {};
+}
+Object.keys(DESIGNS).forEach((k) => {
+  const list = COLORS[k] || [{ n: "Original", sw: "#888888" }];
+  for (const th of THEMES) {
+    if (list.length >= 10) break;
+    const names = list.map(c => c.n.toLowerCase()).join(" ");
+    if (th.alias.some(a => names.includes(a))) continue;
+    list.push({ n: th.n, sw: th.sw, ...themeFor(k, DESIGNS[k], th) });
+  }
+  COLORS[k] = list.slice(0, 10);
+});
+function curDesign() {
+  const base = DESIGNS[card.frame] || DESIGNS.strike, c = (COLORS[card.frame] || [])[card.color | 0];
+  return c ? { ...base, ...c } : base;
+}
 const DESIGN_NAMES = Object.fromEntries(Object.entries(DESIGNS).map(([k, d]) => [k, d.name]));
 const DESIGN_DEFAULTS = Object.fromEntries(Object.entries(DESIGNS).map(([k, d]) => [k, { seal: d.seal, monkey: d.monkey, prop: d.prop }]));
 const FILTERS = {
@@ -942,6 +1043,65 @@ WEAK.shared.push("Spam emails", "Meeting overruns", "Forgotten passwords", "Last
 RESIST.shared.push("Overtime", "Cold coffee", "Group chats", "Free buffets", "Fire drills");
 RETREAT.push("A teh tarik break", "A ten-minute walk", "A desk nap", "One more slice of cake", "Leaving on time");
 FLAVOR.shared.push("Has never missed a lucky draw. Has never won one either.", "Knows where every power socket in the building is.", "Will trade any card for one more pineapple tart.");
+/* --- third batch of moves and abilities --- */
+TEAM_MOVES.ai.push(
+  ["Prompt Injection", "80", "Ignore your opponent's last instruction. Follow yours instead."],
+  ["Model Collapse", "120", "Train on your own outputs. Each turn this does 20 less damage."],
+  ["RAG Doll", "50", "Look up the answer in your discard pile before attacking."],
+  ["Embedding Space", "60", "Send your opponent's guest far, far away. In 1,536 dimensions."],
+  ["Benchmark Flex", "90", "Show everyone your score. It was tested on the training set."],
+  ["Ask The Intern Bot", "30", "Draw a card. It confidently explains the wrong rules."]);
+TEAM_MOVES.ms.push(
+  ["Sensitivity Analysis", "40×", "Nudge one assumption. Does 40 damage for each panic it causes."],
+  ["Agent-Based Chaos", "70", "Release 10,000 tiny agents. They all queue for the buffet."],
+  ["Calibrate", "50", "Adjust this move until it matches last year's results exactly."],
+  ["Time Step Zero", "", "Rewind the game to the start. Keep your snacks."],
+  ["Ensemble Run", "20×", "Run 5 models. Does 20 damage for each one that agrees."],
+  ["Unrealistic Physics", "110", "Your guest walks through a wall. The model says it's fine."]);
+TEAM_MOVES.cape.push(
+  ["Terraform Apply", "100", "Rebuild your opponent's bench from scratch. Pray the state file is right."],
+  ["Cold Start", "20", "Slow the first time. Very fast after that."],
+  ["Kubernetes Shuffle", "60", "Move your opponent's guests to random nodes."],
+  ["Disaster Recovery Drill", "", "Heal all damage. Pretend it was planned."],
+  ["SLA Breach", "130", "Does 130 damage. Your opponent gets a service credit."],
+  ["Zero Trust", "50", "Your opponent must show their badge before every move."]);
+TEAM_MOVES.swe.push(
+  ["Off By One", "99", "Meant to do 100 damage. Close enough."],
+  ["Legacy Code", "70", "Nobody knows how this move works. Do not touch it."],
+  ["Unit Test Shield", "", "Prevent all damage from moves that have no tests."],
+  ["Sprint Planning", "30×", "Does 30 damage for each story point nobody agreed on."],
+  ["Hello World", "10", "Your very first move. Everyone claps."],
+  ["Dependency Hell", "120", "Your opponent must update 312 packages before attacking."]);
+TEAM_MOVES.diux.push(
+  ["Persona Pivot", "60", "Your opponent's guest is now a 34-year-old busy parent."],
+  ["Sticky Note Storm", "20×", "Does 20 damage for each sticky note on the wall."],
+  ["Rounded Corners", "40", "Soften your opponent's attack. Prevent 30 damage."],
+  ["Micro-Interaction", "70", "A tiny animation plays. Your opponent smiles despite themselves."],
+  ["Stakeholder Feedback", "90", "Change everything at the last minute."],
+  ["Empty State", "", "Your opponent's bench looks clean and calm. Nothing happens."]);
+TEAM_MOVES.onedh.push(
+  ["Cross-Cluster Collab", "30×", "Does 30 damage for each different cluster on your bench."],
+  ["Lift Lobby Chat", "40", "Learn your opponent's next move while waiting for the lift."],
+  ["Pantry Summit", "60", "Every guest gathers in the pantry. Big decisions are made."],
+  ["Year-End Review", "100", "Look back on every move this game. Use the best one again."],
+  ["Welcome Aboard", "", "Bring a new guest to your bench with full HP and a lanyard."],
+  ["Hub Huddle", "80", "All your guests attack together. Nobody knows who's leading."]);
+SHARED_MOVES.push(
+  ["Lantern Riddle", "50", "Your opponent must solve a riddle before attacking."],
+  ["Prosperity Toss", "88", "Flip a coin. If heads, draw 2 cards and shout “Huat!”"],
+  ["Visiting Relatives", "40", "Your opponent's guest must answer: “So, when are you getting married?”"],
+  ["Love Letter Crunch", "60", "So crunchy your opponent can't hear their next instruction."],
+  ["Fireworks Finale", "140", "Discard all your energy. Light up the sky."],
+  ["New Year Clothes", "30", "This guest gains 30 HP. Looking sharp."],
+  ["Tangerine Toss", "70", "Throw two tangerines. Each one brings good luck."],
+  ["Spring Cleaning", "", "Discard any bad-luck cards in your hand. Draw the same number."]);
+ABILITIES.ai.push(["Self-Attention", "This guest focuses on the most important card in play."], ["Guardrails", "Prevent damage from moves your opponent can't explain."]);
+ABILITIES.ms.push(["Steady State", "This guest can't take more than 60 damage in one turn."], ["Parameter Sweep", "Once per turn, try every option and keep the best."]);
+ABILITIES.cape.push(["High Availability", "If this guest is knocked out, flip a coin. Heads: it comes back."], ["Infra As Code", "Rebuild this guest exactly as it was at the start of your turn."]);
+ABILITIES.swe.push(["Code Review", "Your opponent's moves need your approval first."], ["Ship It", "This guest's first move each turn costs 1 less energy."]);
+ABILITIES.diux.push(["Visual Hierarchy", "Your biggest move always goes first."], ["Inclusive Design", "Every guest on your bench can use this ability."]);
+ABILITIES.onedh.push(["Common Goal", "All your guests share their HP."], ["Hub Pride", "This guest gets 20 more HP for every DH lanyard in the room."]);
+ABILITIES.shared.push(["Fortune Favours", "Once per game, change a coin flip to heads."], ["Plum Blossom", "Blooms in the cold. This guest gets stronger when behind."], ["Open House", "Any guest may visit your bench. Bring oranges."]);
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const shuffled = (a) => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
@@ -965,7 +1125,7 @@ const card = {
   species: "Official Escort Type", height: "Lanyard: always on", weight: "Kopi: 3 cups/day",
   flavor: "Energetic, innovative and always daring to try. That's the DH way.",
   weakTxt: "Monday mornings", resistTxt: "Long meetings", retreatTxt: "2 kopi breaks", rarity: "rare",
-  frame: "strike", filter: "none", holo: true, seal: false, monkey: "right", prop: "laptop",
+  frame: "strike", color: 0, filter: "none", holo: true, seal: false, monkey: "right", prop: "laptop",
 };
 const photo = { img: null, zoom: 1, ox: 0, oy: 0 };
 
@@ -1580,11 +1740,11 @@ function drawFull(ctx, D) {
   }
   if (D.orn === "cny") { lantern(ctx, P.x + 36, 262, 19); lantern(ctx, P.x + P.w - 36, 236, 16); }
   if (D.orn === "tech") {
-    ctx.save(); ctx.strokeStyle = "#7fe0ff"; ctx.shadowColor = "#2fb4e0"; ctx.shadowBlur = 10; ctx.lineWidth = 3;
+    ctx.save(); ctx.strokeStyle = D.neon || "#7fe0ff"; ctx.shadowColor = D.neon || "#2fb4e0"; ctx.shadowBlur = 10; ctx.lineWidth = 3;
     [[56, 166, 1, 1], [W - 56, 166, -1, 1], [56, 604, 1, -1], [W - 56, 604, -1, -1]].forEach(([cx, cy, dx, dy]) => {
       ctx.beginPath(); ctx.moveTo(cx + dx * 40, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + dy * 40); ctx.stroke();
     });
-    const R = rng(5); ctx.lineWidth = 2; ctx.fillStyle = "#7fe0ff";
+    const R = rng(5); ctx.lineWidth = 2; ctx.fillStyle = D.neon || "#7fe0ff";
     for (let i = 0; i < 10; i++) {
       const side = i % 2 ? 1 : -1; let px = side < 0 ? P.x + 6 : P.x + P.w - 6, py = 190 + R() * 380;
       ctx.beginPath(); ctx.moveTo(px, py); px += -side * (20 + R() * 40); ctx.lineTo(px, py);
@@ -1953,6 +2113,7 @@ function drawIllus(ctx, D) {
     lantern(ctx, P.x + 44, 250, 20); lantern(ctx, P.x + P.w - 44, 226, 16); lantern(ctx, P.x + P.w - 92, 300, 12);
     const R2 = rng(19); for (let i = 0; i < 12; i++) twinkle(ctx, P.x + 20 + R2() * (P.w - 40), 160 + R2() * 520, 2 + R2() * 4, "#ffd56a");
   }
+  if (D.orn === "petals") plumBranch(ctx, P, D.petal || "#ffb3cf");
   if (card.holo) holo(ctx, P, 0.4);
   if (card.monkey !== "off") drawEscort(ctx, card.monkey === "left" ? 130 : W - 130, 600, 46);
   ctx.restore();
@@ -2114,7 +2275,7 @@ function drawFooter(ctx, light, x0, x1, y) {
   ctx.restore(); ctx.textAlign = "left";
   rarityMark(ctx, x1 - 6, y - 5, light ? "#fff" : "#16120e");
 }
-function markTone() { const D = DESIGNS[card.frame] || {}; return D.frame === SILVER || D.frame === YELLOW || D.frame === ICE ? "silver" : "gold"; }
+function markTone() { const D = curDesign(); return D.frame === SILVER || D.frame === YELLOW || D.frame === ICE ? "silver" : "gold"; }
 /* DH Monkey as an embossed foil mark: monochrome relief, no cartoon features */
 function monkeyMark(ctx, h, base, shadow, light) {
   const shape = () => {
@@ -2177,7 +2338,7 @@ function silhouette(ctx, x, y, h, col, line) {
   ctx.save(); ctx.translate(x, y); monkeyMark(ctx, h, col, line, col); ctx.restore();
 }
 function drawBadge(ctx, x, y, r) {
-  const D = DESIGNS[card.frame] || {}, kind = D.badge || "coin";
+  const D = curDesign(), kind = D.badge || "coin";
   const drop = () => { ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3; };
   ctx.save();
   if (kind === "hex" || kind === "hexgold") {
@@ -2234,14 +2395,349 @@ function drawBadge(ctx, x, y, r) {
 }
 
 let PHOTO = { x: 54, y: 120, w: 642, h: 420 };
+/* ---------- shared bits for the newer layouts ---------- */
+function hpText(ctx, x, y, size, color, light, align = "right") {
+  const hp = String(card.hp || "");
+  ctx.textAlign = align; ctx.font = `800 ${size}px ${NF}`; const hw = ctx.measureText(hp).width;
+  textFx(ctx, hp, x, y, light, color);
+  ctx.font = `800 ${Math.round(size * 0.34)}px ${CF}`;
+  textFx(ctx, "HP", align === "right" ? x - hw - 6 : x + hw + 6, y - 3, light, color);
+  ctx.textAlign = "left";
+}
+function clusterLine(ctx, cx, y, color, maxW) {
+  const t = TYPES[card.type] || TYPES.onedh;
+  fitFont(ctx, t.full, 700, 17, CF, maxW - 34, 11);
+  const w = ctx.measureText(t.full).width + 30;
+  energy(ctx, card.type, cx - w / 2 + 11, y - 6, 11);
+  ctx.fillStyle = color; ctx.textAlign = "left"; ctx.fillText(t.full, cx - w / 2 + 28, y);
+}
+function blossom(ctx, x, y, s, col, rot = 0) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillStyle = col;
+  for (let k = 0; k < 5; k++) { ctx.rotate(Math.PI * 0.4); ctx.beginPath(); ctx.ellipse(0, -s * 0.55, s * 0.42, s * 0.56, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = "#ffd56a"; ctx.beginPath(); ctx.arc(0, 0, s * 0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function plumBranch(ctx, P, col) {
+  ctx.save(); ctx.strokeStyle = "rgba(58,30,24,.9)"; ctx.lineCap = "round"; ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 6;
+  ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(P.x - 4, 168); ctx.quadraticCurveTo(150, 186, 262, 146); ctx.stroke();
+  ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(150, 180); ctx.quadraticCurveTo(178, 228, 160, 276); ctx.stroke();
+  ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(220, 160); ctx.quadraticCurveTo(250, 120, 300, 112); ctx.stroke();
+  ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(P.x + P.w + 4, 560); ctx.quadraticCurveTo(W - 120, 540, W - 170, 470); ctx.stroke();
+  ctx.restore();
+  [[110, 176, 15, 0.2], [176, 214, 12, 1], [162, 270, 10, 2], [262, 146, 13, 0.6], [300, 112, 10, 1.4], [222, 168, 9, 2.2], [W - 112, 545, 14, 0.4], [W - 168, 474, 11, 1.8], [W - 140, 512, 8, 0.9]]
+    .forEach(([x, y, s, r]) => blossom(ctx, x, y, s, col, r));
+  const R = rng(73); ctx.save(); ctx.globalAlpha = 0.85;
+  for (let i = 0; i < 14; i++) { ctx.fillStyle = col; ctx.save(); ctx.translate(P.x + 30 + R() * (P.w - 60), 200 + R() * 460); ctx.rotate(R() * 6); ctx.beginPath(); ctx.ellipse(0, 0, 4 + R() * 3, 2.5 + R() * 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  ctx.restore();
+}
+
+/* ---------- Blueprint: engineering drawing ---------- */
+function drawBlueprint(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, B = D.bp, L = B.line;
+  rr(ctx, 0, 0, W, H, 34);
+  const g = ctx.createLinearGradient(0, 0, W * 0.4, H); g.addColorStop(0, B.bg); g.addColorStop(1, B.bg2);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip(); ctx.lineWidth = 1;
+  [[15, 0.07], [75, 0.16]].forEach(([step, a]) => {
+    ctx.strokeStyle = rgbaHex(L, a); ctx.beginPath();
+    for (let x = 0; x <= W; x += step) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+    for (let y = 0; y <= H; y += step) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+    ctx.stroke();
+  });
+  ctx.restore();
+  ctx.strokeStyle = rgbaHex(L, 0.9); ctx.lineWidth = 2.5; ctx.strokeRect(26, 26, W - 52, H - 52);
+  ctx.lineWidth = 1; ctx.strokeRect(34, 34, W - 68, H - 68);
+  // header
+  ctx.fillStyle = rgbaHex(L, 0.75); ctx.font = `600 14px ${NF}`;
+  ctx.fillText(`DWG NO. DH-${String(event.num).padStart(3, "0")}   ·   REV A   ·   SCALE 1:1`, 52, 62);
+  const nm = card.name || "Your Name";
+  fitFont(ctx, nm, 800, 46, CF, W - 300, 22); textFx(ctx, nm, 50, 114, true, "#fff");
+  drawBadge(ctx, W - 76, 86, 28);
+  hpText(ctx, W - 118, 114, 50, "#fff", true);
+  // photo with a cool engineering tint
+  ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  drawPhoto(ctx, P, t, P.y + P.h / 2 + 12);
+  ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = rgbaHex(B.bg, 0.22); ctx.fillRect(P.x, P.y, P.w, P.h);
+  ctx.globalCompositeOperation = "source-over";
+  if (card.holo) holo(ctx, P, 0.35);
+  ctx.restore();
+  ctx.strokeStyle = L; ctx.lineWidth = 2; ctx.strokeRect(P.x, P.y, P.w, P.h);
+  ctx.lineWidth = 1.5; ctx.beginPath();
+  [[P.x, P.y, -1, -1], [P.x + P.w, P.y, 1, -1], [P.x, P.y + P.h, -1, 1], [P.x + P.w, P.y + P.h, 1, 1]].forEach(([x, y, dx, dy]) => {
+    ctx.moveTo(x + dx * 5, y); ctx.lineTo(x + dx * 16, y); ctx.moveTo(x, y + dy * 5); ctx.lineTo(x, y + dy * 16);
+  });
+  // dimension line above the photo
+  const dy = P.y - 14;
+  ctx.moveTo(P.x, dy); ctx.lineTo(P.x + P.w, dy); ctx.moveTo(P.x, dy - 6); ctx.lineTo(P.x, dy + 6); ctx.moveTo(P.x + P.w, dy - 6); ctx.lineTo(P.x + P.w, dy + 6);
+  ctx.stroke();
+  const dl = `${t.label.toUpperCase()} UNIT  ·  ${(card.stage || "BASIC").toUpperCase()}`;
+  ctx.font = `700 14px ${NF}`; const dw = ctx.measureText(dl).width + 18;
+  ctx.fillStyle = B.bg; ctx.fillRect(W / 2 - dw / 2, dy - 9, dw, 18);
+  ctx.fillStyle = L; ctx.textAlign = "center"; ctx.fillText(dl, W / 2, dy + 5);
+  // figure caption
+  ctx.font = `600 15px ${NF}`; ctx.textAlign = "left"; ctx.fillStyle = rgbaHex(L, 0.85);
+  ctx.fillText(`FIG. 1 — ${nm.toUpperCase()}`.slice(0, 40), P.x, P.y + P.h + 26);
+  ctx.textAlign = "right"; fitFont(ctx, card.species || "", 600, 15, NF, 300, 10); ctx.fillText(card.species || "", P.x + P.w, P.y + P.h + 26);
+  ctx.textAlign = "left";
+  // moves in a dashed box
+  ctx.setLineDash([8, 6]); ctx.strokeStyle = rgbaHex(L, 0.6); ctx.lineWidth = 1.5; ctx.strokeRect(50, 642, W - 100, 230); ctx.setLineDash([]);
+  drawMoves(ctx, 650, 864, true, 68, W - 68);
+  // title block
+  const cw = (W - 100) / 3;
+  ctx.strokeStyle = rgbaHex(L, 0.85); ctx.lineWidth = 1.5; ctx.strokeRect(50, 884, W - 100, 100);
+  ctx.beginPath(); ctx.moveTo(50 + cw, 884); ctx.lineTo(50 + cw, 984); ctx.moveTo(50 + cw * 2, 884); ctx.lineTo(50 + cw * 2, 984); ctx.stroke();
+  drawStats(ctx, 916, true, 50, W - 50);
+  ctx.fillStyle = rgbaHex(L, 0.6); ctx.font = `600 12px ${NF}`; ctx.fillText(`CHECKED: DH MONKEY   ·   APPROVED: ${t.label.toUpperCase()}`, 66, 972);
+  drawFooter(ctx, true, 50, W - 50, 1010);
+}
+
+/* ---------- Magazine Cover: full photo with a masthead and cover lines ---------- */
+function drawCover(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, C = D.cv, M = C.mast;
+  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = "#f4f2ee"; ctx.fill();
+  ctx.save(); rr(ctx, P.x, P.y, P.w, P.h, 18); ctx.clip();
+  drawPhoto(ctx, P, t, 470);
+  let g = ctx.createLinearGradient(0, P.y, 0, P.y + 300); g.addColorStop(0, "rgba(0,0,0,.55)"); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g; ctx.fillRect(P.x, P.y, P.w, 300);
+  g = ctx.createLinearGradient(0, 600, 0, H); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(0.4, "rgba(0,0,0,.62)"); g.addColorStop(1, "rgba(0,0,0,.92)");
+  ctx.fillStyle = g; ctx.fillRect(P.x, 600, P.w, H - 600);
+  g = ctx.createLinearGradient(P.x, 0, P.x + 380, 0); g.addColorStop(0, "rgba(0,0,0,.45)"); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g; ctx.fillRect(P.x, 260, 380, 400);
+  if (card.holo) holo(ctx, P, 0.35);
+  // top line + masthead
+  ctx.font = `700 14px ${CF}`; ctx.fillStyle = "rgba(255,255,255,.95)";
+  ctx.fillText("DIGITAL HUB  ·  CNY 2027 SPECIAL", 46, 60);
+  ctx.textAlign = "right"; ctx.fillText(`ISSUE ${String(event.num).padStart(3, "0")}  ·  S$8.88`, W - 46, 60); ctx.textAlign = "left";
+  fitFont(ctx, "ONE DH", "900", 210, NF, W - 92, 80);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; ctx.fillStyle = M; ctx.fillText("ONE DH", 40, 226); ctx.restore();
+  // HP sticker under the badge
+  drawBadge(ctx, W - 76, 282, 30);
+  rr(ctx, W - 170, 326, 124, 44, 10); ctx.fillStyle = M; ctx.fill();
+  ctx.fillStyle = C.mastInk; ctx.textAlign = "center"; ctx.font = `800 30px ${NF}`; ctx.fillText(`${card.hp || ""} HP`, W - 108, 358); ctx.textAlign = "left";
+  // cover lines
+  const m = card.attacks[0] || {};
+  const lines = [["EXCLUSIVE", `Inside the ${t.label} cluster`], ["SPECIAL MOVE", `${m.name || "Secret move"}${m.dmg ? " · " + m.dmg : ""}`],
+    [card.ability && card.ability.name ? "ABILITY" : "PLUS", (card.ability && card.ability.name) || card.species || "Huat all year"], ["WEAKNESS", card.weakTxt || "Monday mornings"]];
+  let y = 322;
+  for (const [k, v] of lines) {
+    ctx.font = `800 26px ${NF}`; const ls = wrap(ctx, String(v).toUpperCase(), 320).slice(0, 2);
+    if (y + 30 + ls.length * 28 > 700) break;
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0,.75)"; ctx.shadowBlur = 6;
+    ctx.font = `800 15px ${CF}`; ctx.fillStyle = M; ctx.fillText(k, 50, y);
+    ctx.font = `800 26px ${NF}`; ctx.fillStyle = "#fff"; ls.forEach((ln, i) => ctx.fillText(ln, 50, y + 30 + i * 28));
+    ctx.restore(); y += 30 + ls.length * 28 + 20;
+  }
+  // cover star
+  const nm = card.name || "Your Name";
+  fitFont(ctx, nm, 800, 66, CF, W - 100, 26); textFx(ctx, nm, 46, 774, true, "#fff");
+  ctx.save(); fitFont(ctx, stripText(), "italic 600", 15, CF, W - 100, 10); ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillText(stripText(), 48, 802); ctx.restore();
+  // one move, compact
+  const sv = [card.ability, card.attack2]; card.ability = null; card.attack2 = false;
+  ctx.save(); ctx.translate(48, 818); ctx.scale(0.8, 0.8); drawMoves(ctx, 0, 112 / 0.8, true, 0, (W - 96) / 0.8); ctx.restore();
+  card.ability = sv[0]; card.attack2 = sv[1];
+  // barcode
+  const bx = W - 178, by = 936;
+  ctx.fillStyle = "#fff"; ctx.fillRect(bx, by, 130, 60);
+  const R = rng(event.num || 7); ctx.fillStyle = "#111";
+  for (let x = bx + 8; x < bx + 122;) { const w = 1 + Math.floor(R() * 3); ctx.fillRect(x, by + 6, w, 36); x += w + 1 + Math.floor(R() * 3); }
+  ctx.font = `700 11px ${NF}`; ctx.textAlign = "center"; ctx.fillText(`9 770 2027 ${String(event.num).padStart(3, "0")}`, bx + 65, by + 55); ctx.textAlign = "left";
+  ctx.restore();
+  rr(ctx, P.x, P.y, P.w, P.h, 18); ctx.strokeStyle = "rgba(255,255,255,.6)"; ctx.lineWidth = 1.5; ctx.stroke();
+  drawFooter(ctx, true, 46, W - 200, 1004);
+}
+
+/* ---------- Postage Stamp: perforated paper, postmark ---------- */
+function drawStamp(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, S = D.st, INK = S.ink;
+  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = S.bg; ctx.fill();
+  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip(); ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 1;
+  for (let i = 0; i < 46; i++) { ctx.beginPath(); ctx.arc(W / 2, H / 2, 30 + i * 15, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+  const x0 = 38, y0 = 38, x1 = W - 38, y1 = H - 38, pr = 9, step = 26;
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.4)"; ctx.shadowBlur = 16; ctx.shadowOffsetY = 5;
+  ctx.fillStyle = S.paper; ctx.fillRect(x0, y0, x1 - x0, y1 - y0); ctx.restore();
+  ctx.fillStyle = S.bg;
+  const holes = (ax, ay, bx, by) => { const n = Math.round(Math.hypot(bx - ax, by - ay) / step); for (let i = 0; i <= n; i++) { ctx.beginPath(); ctx.arc(ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n, pr, 0, Math.PI * 2); ctx.fill(); } };
+  holes(x0, y0, x1, y0); holes(x0, y1, x1, y1); holes(x0, y0, x0, y1); holes(x1, y0, x1, y1);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeRect(64, 64, W - 128, H - 128);
+  ctx.lineWidth = 1; ctx.strokeRect(72, 72, W - 144, H - 144);
+  ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.font = `800 15px ${CF}`;
+  ctx.fillText("DIGITAL HUB   ·   SINGAPORE   ·   CNY 2027", W / 2, 102);
+  const nm = card.name || "Your Name";
+  fitFont(ctx, nm, "italic 800", 46, SF, W - 190, 22); ctx.fillText(nm, W / 2, 154); ctx.textAlign = "left";
+  ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  drawPhoto(ctx, P, t, P.y + P.h / 2 + 12); if (card.holo) holo(ctx, P, 0.35);
+  // postmark
+  const cx = P.x + P.w - 116, cy = P.y + P.h - 78, r = 56;
+  ctx.save(); ctx.globalAlpha = 0.62; ctx.strokeStyle = "#151515"; ctx.fillStyle = "#151515";
+  ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, r - 9, 0, Math.PI * 2); ctx.stroke();
+  ctx.textAlign = "center"; ctx.font = `800 16px ${CF}`; ctx.fillText("DH POST", cx, cy - 2); ctx.font = `700 12px ${CF}`; ctx.fillText("· CNY 2027 ·", cx, cy + 18);
+  ctx.lineWidth = 2.5;
+  for (let k = 0; k < 4; k++) { ctx.beginPath(); const yy = cy - 24 + k * 16; for (let x = 0; x <= 190; x += 4) { const px = cx - r - 12 - x, py = yy + Math.sin(x / 11) * 4; x ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.stroke(); }
+  ctx.restore();
+  ctx.restore();
+  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.strokeRect(P.x, P.y, P.w, P.h);
+  // value box
+  rr(ctx, P.x + 12, P.y + 12, 118, 66, 8); ctx.fillStyle = S.paper; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = INK; ctx.textAlign = "center"; ctx.font = `800 42px ${NF}`; ctx.fillText(String(card.hp || ""), P.x + 71, P.y + 54);
+  ctx.font = `800 12px ${CF}`; ctx.fillText("HP", P.x + 71, P.y + 71); ctx.textAlign = "left";
+  drawBadge(ctx, P.x + P.w - 46, P.y + 46, 28);
+  clusterLine(ctx, W / 2, P.y + P.h + 30, INK, W - 200);
+  ctx.save(); ctx.textAlign = "center"; fitFont(ctx, stripText(), "italic 600", 13, CF, W - 200, 9); ctx.fillStyle = rgbaHex(INK, 0.75); ctx.fillText(stripText(), W / 2, P.y + P.h + 52); ctx.restore();
+  drawMoves(ctx, 670, 884, false, 96, W - 96);
+  drawStats(ctx, 906, false, 84, W - 84);
+  drawFooter(ctx, false, 92, W - 92, 966);
+}
+
+/* ---------- Polaroid: taped snapshot on kraft paper or chalkboard ---------- */
+function drawPolaroid(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, Q = D.pl, dark = !!Q.dark, ink = dark ? "#f4efe6" : "#2a1d12";
+  rr(ctx, 0, 0, W, H, 34);
+  const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, Q.bg1); g.addColorStop(1, Q.bg2); ctx.fillStyle = g; ctx.fill();
+  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip(); const R = rng(41);
+  for (let i = 0; i < 1100; i++) { ctx.fillStyle = R() < 0.5 ? "rgba(255,255,255,.07)" : "rgba(0,0,0,.07)"; ctx.fillRect(R() * W, R() * H, 1 + R() * 2, 1 + R() * 2); }
+  if (dark) for (let i = 0; i < 6; i++) { ctx.fillStyle = "rgba(255,255,255,.035)"; ctx.beginPath(); ctx.ellipse(R() * W, R() * H, 80 + R() * 160, 30 + R() * 60, R() * 3, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  const nm = card.name || "Your Name";
+  fitFont(ctx, nm, "italic 800", 50, SF, W - 290, 22); ctx.fillStyle = ink; ctx.fillText(nm, 48, 106);
+  drawBadge(ctx, W - 72, 80, 28);
+  hpText(ctx, W - 114, 106, 50, ink, dark);
+  // the snapshot
+  ctx.save(); ctx.translate(W / 2, 420); ctx.rotate(-0.035); ctx.translate(-W / 2, -420);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.45)"; ctx.shadowBlur = 22; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = "#fbfaf6"; ctx.fillRect(P.x - 26, P.y - 26, P.w + 52, P.h + 118); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(P.x, P.y, P.w, P.h); ctx.clip();
+  drawPhoto(ctx, P, t, P.y + P.h / 2 + 12); if (card.holo) holo(ctx, P, 0.3);
+  const v = ctx.createRadialGradient(P.x + P.w / 2, P.y + P.h / 2, P.h * 0.3, P.x + P.w / 2, P.y + P.h / 2, P.h * 0.85);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(50,25,0,.25)"); ctx.fillStyle = v; ctx.fillRect(P.x, P.y, P.w, P.h);
+  ctx.restore();
+  ctx.strokeStyle = "rgba(0,0,0,.12)"; ctx.lineWidth = 1; ctx.strokeRect(P.x, P.y, P.w, P.h);
+  const cap = `${t.label}  ·  #OneDH  ·  CNY 2027`;
+  ctx.textAlign = "center"; fitFont(ctx, cap, "italic 700", 28, SF, P.w - 40, 14); ctx.fillStyle = "#3a2c22"; ctx.fillText(cap, W / 2, P.y + P.h + 60); ctx.textAlign = "left";
+  const tape = (x, y, r) => { ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.fillStyle = "rgba(246,236,200,.75)"; ctx.fillRect(-58, -16, 116, 32); ctx.strokeStyle = "rgba(0,0,0,.06)"; ctx.strokeRect(-58, -16, 116, 32); ctx.restore(); };
+  tape(P.x + 6, P.y - 20, -0.6); tape(P.x + P.w - 6, P.y - 20, 0.6);
+  ctx.restore();
+  // moves on a sheet of lined paper
+  const nx = 52, ny = 714, nw = W - 104, nh = 238;
+  ctx.save(); ctx.translate(W / 2, ny + nh / 2); ctx.rotate(0.012); ctx.translate(-W / 2, -(ny + nh / 2));
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4; ctx.fillStyle = "#fffdf4"; ctx.fillRect(nx, ny, nw, nh); ctx.restore();
+  ctx.strokeStyle = "rgba(70,120,200,.2)"; ctx.lineWidth = 1; ctx.beginPath(); for (let y = ny + 34; y < ny + nh; y += 28) { ctx.moveTo(nx, y); ctx.lineTo(nx + nw, y); } ctx.stroke();
+  ctx.strokeStyle = "rgba(220,60,60,.35)"; ctx.beginPath(); ctx.moveTo(nx + 30, ny); ctx.lineTo(nx + 30, ny + nh); ctx.stroke();
+  drawMoves(ctx, ny + 8, ny + nh - 8, false, nx + 44, nx + nw - 18);
+  ctx.restore();
+  ctx.save(); ctx.translate(40, 962); ctx.scale(0.74, 0.74); drawStats(ctx, 12, dark, 0, (W - 80) / 0.74); ctx.restore();
+  drawFooter(ctx, dark, 48, W - 48, 1016);
+}
+
+/* ---------- Ink Scroll: rice paper, ink-wash hills, moon window ---------- */
+function drawScroll(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, S = D.sc, dark = !!S.dark, INK = S.ink;
+  rr(ctx, 0, 0, W, H, 34); ctx.fillStyle = S.paper; ctx.fill();
+  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip();
+  const R = rng(57); ctx.lineCap = "round";
+  for (let i = 0; i < 170; i++) {
+    ctx.strokeStyle = rgbaHex(INK, 0.03 + R() * 0.03); ctx.lineWidth = 0.6 + R();
+    const x = R() * W, y = R() * H; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (R() - 0.5) * 40, y + (R() - 0.5) * 20, x + (R() - 0.5) * 80, y + (R() - 0.5) * 30); ctx.stroke();
+  }
+  [[0.09, 520, 1.0], [0.14, 575, 0.8], [0.2, 630, 0.6]].forEach(([a, base, amp], k) => {
+    ctx.fillStyle = rgbaHex(INK, a); ctx.beginPath(); ctx.moveTo(0, H);
+    for (let x = 0; x <= W; x += 10) ctx.lineTo(x, base - amp * (60 * Math.sin(x / 90 + k * 2) + 40 * Math.sin(x / 37 + k) + 40));
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  });
+  const fade = ctx.createLinearGradient(0, 600, 0, 690); fade.addColorStop(0, rgbaHex(S.paper, 0)); fade.addColorStop(1, rgbaHex(S.paper, 1));
+  ctx.fillStyle = fade; ctx.fillRect(0, 600, W, H - 600);
+  ctx.restore();
+  const nm = card.name || "Your Name";
+  fitFont(ctx, nm, 800, 48, SF, W - 300, 22); ctx.fillStyle = INK; ctx.fillText(nm, 52, 106);
+  drawBadge(ctx, W - 74, 80, 28);
+  hpText(ctx, W - 116, 106, 48, INK, dark);
+  ctx.save(); ctx.lineCap = "round";
+  for (let k = 0; k < 4; k++) { ctx.strokeStyle = rgbaHex(INK, 0.18 + k * 0.15); ctx.lineWidth = 4 - k * 0.8; ctx.beginPath(); ctx.moveTo(52 + k * 6, 128 + k * 0.6); ctx.quadraticCurveTo(W / 2, 122 + k, W - 52 - k * 10, 130 - k * 0.5); ctx.stroke(); }
+  ctx.restore();
+  // vertical calligraphy: 同心协力, hearts and hands together
+  ctx.fillStyle = rgbaHex(INK, 0.85); ctx.font = `700 34px ${CJK}`; ctx.textAlign = "center";
+  "同心協力".split("").forEach((ch, i) => ctx.fillText(ch, 80, 226 + i * 52));
+  ctx.textAlign = "left";
+  const cx = P.x + P.w / 2, cy = P.y + P.h / 2, r = P.w / 2;
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip(); drawPhoto(ctx, P, t, cy + 12); if (card.holo) holo(ctx, P, 0.3); ctx.restore();
+  ctx.save(); ctx.lineCap = "round";
+  for (let k = 0; k < 5; k++) { ctx.strokeStyle = rgbaHex(INK, 0.22 + k * 0.13); ctx.lineWidth = 2 + (4 - k) * 2.2; const a0 = -0.4 + k * 0.35; ctx.beginPath(); ctx.arc(cx + (k - 2) * 1.2, cy + (k - 2), r + 5 + k * 1.5, a0, a0 + Math.PI * 2 - 0.5 - k * 0.2); ctx.stroke(); }
+  ctx.restore();
+  // red seal with the cluster
+  ctx.save(); ctx.translate(cx + r * 0.74, cy + r * 0.78); ctx.rotate(-0.06);
+  rr(ctx, -40, -40, 80, 80, 6); ctx.fillStyle = S.seal; ctx.fill();
+  ctx.strokeStyle = rgbaHex(S.paper, 0.85); ctx.lineWidth = 2; ctx.strokeRect(-32, -32, 64, 64);
+  ctx.fillStyle = S.paper; ctx.textAlign = "center"; ctx.textBaseline = "middle"; fitFont(ctx, t.label, 800, 26, CF, 58, 12); ctx.fillText(t.label, 0, 2);
+  ctx.restore(); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  clusterLine(ctx, W / 2, 678, INK, W - 140);
+  ctx.save(); ctx.textAlign = "center"; fitFont(ctx, stripText(), "italic 600", 13, CF, W - 140, 9); ctx.fillStyle = rgbaHex(INK, 0.7); ctx.fillText(stripText(), W / 2, 700); ctx.restore();
+  drawMoves(ctx, 712, 904, dark, 64, W - 64);
+  drawStats(ctx, 926, dark, 52, W - 52);
+  drawFooter(ctx, dark, 50, W - 50, 1006);
+}
+
+/* ---------- Art Deco: geometric metalwork, octagon window ---------- */
+function drawDeco(ctx, D) {
+  const t = TYPES[card.type] || TYPES.onedh, P = PHOTO, K = D.dc, ACC = K.ink;
+  const mt = (x0, y0, x1, y1) => metal(ctx, x0, y0, x1, y1, K.metal);
+  rr(ctx, 0, 0, W, H, 34);
+  const g = ctx.createRadialGradient(W / 2, 300, 50, W / 2, 500, 820); g.addColorStop(0, K.bg2); g.addColorStop(1, K.bg); ctx.fillStyle = g; ctx.fill();
+  ctx.save(); rr(ctx, 0, 0, W, H, 34); ctx.clip();
+  ctx.globalAlpha = 0.3; ctx.strokeStyle = mt(0, 0, W, 300); ctx.lineWidth = 1.5;
+  for (let i = 0; i <= 28; i++) { const a = Math.PI + (i / 28) * Math.PI; ctx.beginPath(); ctx.moveTo(W / 2, 200); ctx.lineTo(W / 2 + Math.cos(a) * 560, 200 + Math.sin(a) * 560); ctx.stroke(); }
+  [70, 110, 150].forEach(rad => { ctx.beginPath(); ctx.arc(W / 2, 200, rad, Math.PI, 0); ctx.stroke(); });
+  ctx.globalAlpha = 0.18;
+  for (let x = 40; x < W; x += 22) { ctx.beginPath(); ctx.moveTo(x, H - 120); ctx.lineTo(x, H - 40); ctx.stroke(); }
+  ctx.restore();
+  rr(ctx, 18, 18, W - 36, H - 36, 24); ctx.strokeStyle = mt(0, 0, W, H); ctx.lineWidth = 5; ctx.stroke();
+  rr(ctx, 30, 30, W - 60, H - 60, 16); ctx.lineWidth = 1.5; ctx.stroke();
+  const corner = (x, y, sx, sy) => { ctx.beginPath(); for (let k = 0; k < 3; k++) { const o = 44 + k * 12; ctx.moveTo(x + sx * o, y + sy * 12); ctx.lineTo(x + sx * o, y + sy * o); ctx.lineTo(x + sx * 12, y + sy * o); } ctx.stroke(); };
+  ctx.lineWidth = 2; corner(30, 30, 1, 1); corner(W - 30, 30, -1, 1); corner(30, H - 30, 1, -1); corner(W - 30, H - 30, -1, -1);
+  // header
+  ctx.fillStyle = ACC; ctx.textAlign = "center"; ctx.font = `700 14px ${CF}`; ctx.fillText("◆   DIGITAL HUB   ◆", W / 2, 72);
+  const nm = (card.name || "Your Name").toUpperCase();
+  fitFont(ctx, nm, 800, 44, SF, W - 330, 20);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 8; ctx.fillStyle = mt(0, 92, 0, 132); ctx.fillText(nm, W / 2, 128); ctx.restore();
+  ctx.textAlign = "left";
+  hpText(ctx, 60, 126, 42, ACC, true, "left");
+  drawBadge(ctx, W - 84, 104, 28);
+  // octagon window
+  const oct = (x, y, w, h, c) => polyPath(ctx, [[x + c, y], [x + w - c, y], [x + w, y + c], [x + w, y + h - c], [x + w - c, y + h], [x + c, y + h], [x, y + h - c], [x, y + c]]);
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 20; oct(P.x - 14, P.y - 14, P.w + 28, P.h + 28, 54); ctx.fillStyle = mt(P.x, P.y, P.x + P.w, P.y + P.h); ctx.fill(); ctx.restore();
+  oct(P.x - 6, P.y - 6, P.w + 12, P.h + 12, 48); ctx.fillStyle = K.bg; ctx.fill();
+  ctx.save(); oct(P.x, P.y, P.w, P.h, 44); ctx.clip(); drawPhoto(ctx, P, t, P.y + P.h / 2 + 12); if (card.holo) holo(ctx, P, 0.35); ctx.restore();
+  oct(P.x, P.y, P.w, P.h, 44); ctx.strokeStyle = mt(P.x, P.y, P.x + P.w, P.y + P.h); ctx.lineWidth = 1.5; ctx.stroke();
+  // divider with the cluster
+  const dy = P.y + P.h + 36;
+  ctx.strokeStyle = mt(0, 0, W, 0); ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(70, dy - 6); ctx.lineTo(W / 2 - 180, dy - 6); ctx.moveTo(W / 2 + 180, dy - 6); ctx.lineTo(W - 70, dy - 6); ctx.stroke();
+  clusterLine(ctx, W / 2, dy, ACC, 340);
+  drawMoves(ctx, 678, 894, true, 76, W - 76);
+  ctx.fillStyle = mt(0, 0, W, 0); ctx.fillRect(70, 904, W - 140, 1.5);
+  drawStats(ctx, 930, true, 60, W - 60);
+  drawFooter(ctx, true, 54, W - 54, 1000);
+}
+
+const LAYOUT_PHOTO = {
+  mosaic: { x: 24, y: 24, w: W - 48, h: H - 48, focus: 440 }, illus: { x: 16, y: 16, w: W - 32, h: H - 32, focus: 440 },
+  strike: { x: 22, y: 22, w: W - 44, h: H - 44, focus: 400 }, full: { x: 22, y: 22, w: W - 44, h: H - 44 },
+  poster: { x: 72, y: 196, w: 606, h: 516 }, classic: { x: 54, y: 120, w: 642, h: 420 },
+  blueprint: { x: 66, y: 152, w: 618, h: 448 }, cover: { x: 22, y: 22, w: W - 44, h: H - 44, focus: 470 },
+  stamp: { x: 94, y: 176, w: 562, h: 420 }, polaroid: { x: 122, y: 172, w: 506, h: 420 },
+  scroll: { x: 164, y: 158, w: 470, h: 470 }, deco: { x: 96, y: 166, w: 558, h: 450 },
+};
+const LAYOUT_DRAW = { illus: drawIllus, mosaic: drawIllus, strike: drawStrike, full: drawFull, poster: drawPoster, classic: drawClassic,
+  blueprint: drawBlueprint, cover: drawCover, stamp: drawStamp, polaroid: drawPolaroid, scroll: drawScroll, deco: drawDeco };
+
 function drawCard(ctx, scale = 1) {
-  const D = DESIGNS[card.frame] || DESIGNS.lunar;
-  PHOTO = D.layout === "mosaic" ? { x: 24, y: 24, w: W - 48, h: H - 48, focus: 440 } : D.layout === "illus" ? { x: 16, y: 16, w: W - 32, h: H - 32, focus: 440 } : D.layout === "strike" ? { x: 22, y: 22, w: W - 44, h: H - 44, focus: 400 } : D.layout === "full" ? { x: 22, y: 22, w: W - 44, h: H - 44 } : D.layout === "poster" ? { x: 72, y: 196, w: 606, h: 516 } : { x: 54, y: 120, w: 642, h: 420 };
+  const D = curDesign();
+  PHOTO = { ...(LAYOUT_PHOTO[D.layout] || LAYOUT_PHOTO.classic) };
   ctx.save();
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, W, H);
   ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  if (D.layout === "illus" || D.layout === "mosaic") drawIllus(ctx, D); else if (D.layout === "strike") drawStrike(ctx, D); else if (D.layout === "full") drawFull(ctx, D); else if (D.layout === "poster") drawPoster(ctx, D); else drawClassic(ctx, D);
+  (LAYOUT_DRAW[D.layout] || drawClassic)(ctx, D);
   ctx.restore();
 }
 
@@ -2364,10 +2860,17 @@ function shuffleCard() {
 }
 
 const DESIGN_ORDER = Object.keys(DESIGN_NAMES);
-function setDesign(v) { card.frame = v; Object.assign(card, DESIGN_DEFAULTS[v] || {}); fillForm(); render(); }
+function setDesign(v) { card.frame = v; card.color = 0; Object.assign(card, DESIGN_DEFAULTS[v] || {}); fillForm(); render(); }
+function setColor(k) {
+  const n = (COLORS[card.frame] || []).length || 1;
+  card.color = ((k % n) + n) % n; updateDesignNav(); render();
+}
 function updateDesignNav() {
   $("designName").textContent = DESIGN_NAMES[card.frame] || "";
-  $("designDots").innerHTML = DESIGN_ORDER.map(k => `<i class="${k === card.frame ? "on" : ""}"></i>`).join("");
+  const cols = COLORS[card.frame] || [], ci = Math.min(card.color | 0, Math.max(0, cols.length - 1));
+  $("designDots").textContent = `Design ${DESIGN_ORDER.indexOf(card.frame) + 1} of ${DESIGN_ORDER.length}${cols[ci] ? "  ·  " + cols[ci].n : ""}`;
+  $("colorRow").hidden = cols.length < 2;
+  $("colorRow").innerHTML = cols.map((c, k) => `<button type="button" role="radio" aria-checked="${k === ci}" aria-label="${c.n}" title="${c.n}" data-k="${k}" style="--sw:${c.sw}"></button>`).join("");
 }
 function cycleDesign(dir) {
   const i = DESIGN_ORDER.indexOf(card.frame);
@@ -2377,6 +2880,13 @@ function cycleDesign(dir) {
   }
 }
 $("prevDesign").addEventListener("click", () => cycleDesign(-1));
+$("colorRow").addEventListener("click", (e) => { const b = e.target.closest("button[data-k]"); if (b) setColor(+b.dataset.k); });
+document.addEventListener("keydown", (e) => {
+  if (!["ArrowUp", "ArrowDown"].includes(e.key) || location.hash) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  e.preventDefault(); setColor((card.color | 0) + (e.key === "ArrowDown" ? 1 : -1));
+});
 $("nextDesign").addEventListener("click", () => cycleDesign(1));
 
 /* ---------- Camera ---------- */
@@ -2480,7 +2990,7 @@ function setPan(on) {
   $("tilt").classList.toggle("pan", panMode);
   $("panBtn").classList.toggle("on", panMode); $("panBtn").setAttribute("aria-pressed", String(panMode));
   $("panBtn").textContent = panMode ? "✓ Done moving" : "✋ Move photo";
-  $("hint").textContent = panMode ? "Drag the photo inside the window to reposition it" : "Swipe the card left or right to change the design";
+  $("hint").textContent = panMode ? "Drag the photo inside the window to reposition it" : "Swipe the card left or right for a new design · tap a colour below";
 }
 $("panBtn").addEventListener("click", () => { if (!photo.img) { toast("Take a photo first"); return; } setPan(!panMode); });
 cv.addEventListener("pointerdown", (e) => {
@@ -2496,6 +3006,7 @@ cv.addEventListener("pointerup", (e) => {
   if (swipe) {
     const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2) cycleDesign(dx < 0 ? 1 : -1);
+    else if (e.pointerType === "mouse" && Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx) * 1.2) setColor((card.color | 0) + (dy < 0 ? 1 : -1));
   }
   swipe = null; drag = null;
 });
@@ -2642,7 +3153,7 @@ async function api(method, query = "", body) {
   } catch { return { ok: false, status: 0, data: { error: "No connection. Check your Wi-Fi or data and try again." } }; }
 }
 let postedSig = "";
-const cardSig = () => [photo.img?.src?.length, photo.img?.src?.slice(-24), card.name, card.type, card.frame].join("|");
+const cardSig = () => [photo.img?.src?.length, photo.img?.src?.slice(-24), card.name, card.type, card.frame, card.color].join("|");
 function resetPostBtn() { const b = $("postBtn"); if (b && postedSig && postedSig !== cardSig()) { postedSig = ""; b.disabled = false; b.textContent = "📌 Post to Card Wall"; } }
 async function postToWall() {
   if (!photo.img) { toast("Take a photo first"); return; }
@@ -2684,7 +3195,7 @@ async function makeDemoCard(i, forceType) {
   const names = ["Ada Tan", "Marcus Lim", "Priya Nair", "Jun Wei", "Siti Rahman", "Kevin & Mei", "Daniel Ong", "Hui Min", "Ravi Kumar", "Grace Teo", "Faizal", "Chloe Ng", "Wei Ling", "Arjun & Bala"];
   const keys = Object.keys(DESIGNS);
   photo.img = await demoAvatar(i); photo.zoom = 1; photo.ox = 0; photo.oy = 0; photo.userMoved = false;
-  card.type = forceType || TEAM_KEYS[i % TEAM_KEYS.length]; card.frame = keys[i % keys.length]; Object.assign(card, DESIGN_DEFAULTS[card.frame]);
+  card.type = forceType || TEAM_KEYS[i % TEAM_KEYS.length]; card.frame = keys[i % keys.length]; Object.assign(card, DESIGN_DEFAULTS[card.frame]); card.color = Math.floor(Math.random() * (COLORS[card.frame] || [1]).length);
   shuffleCard(); card.name = names[i % names.length]; event.num = 1 + ((i * 17) % 199);
   demoCards.set("demo" + String(i).padStart(3, "0") + "-" + card.type, exportCanvas(0.6).toDataURL("image/jpeg", 0.85));
 }
