@@ -291,6 +291,27 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(script) { display: no
 .pcard.rare.flipped::after { animation: land-flash .9s .7s ease-out; inset: -40%; }
 @keyframes land-flash { 0% { opacity: 0; transform: scale(.5); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.5); } }
 .pack-stage.shake { animation: stage-shake .45s ease-in-out; }
+.rar-tag { position: absolute; left: 50%; top: 104%; transform: translateX(-50%) scale(.5); opacity: 0; white-space: nowrap; z-index: 2;
+  font: 800 clamp(13px, 2.3vh, 26px) var(--font-display); letter-spacing: .06em; padding: .22em .85em; border-radius: 999px;
+  background: rgba(12,6,10,.8); color: #ffe39a; border: 1px solid rgba(255,220,140,.6); transition: transform .45s cubic-bezier(.2,.9,.3,1.5), opacity .3s; }
+.rar-tag .st { color: #ffd56a; letter-spacing: .12em; }
+.pcard.shown .rar-tag { opacity: 1; transform: translateX(-50%) scale(1); }
+.rar-3 .rar-tag { background: linear-gradient(90deg, #ff6ec4, #7873f5, #4adede, #a6ff7a, #ffe66d, #ff6ec4); background-size: 300% 100%; color: #160c1c; border: none; animation: foil-run 2.4s linear infinite; }
+.rar-3 .rar-tag .st { color: #160c1c; }
+.rar-4 .rar-tag { background: linear-gradient(90deg, #fff1b0, #d9a93c, #fff6d6, #b8862a); color: #4a060c; border: none; box-shadow: 0 0 26px 6px rgba(255,210,110,.85); }
+.rar-4 .rar-tag .st { color: #4a060c; }
+@keyframes foil-run { to { background-position: 300% 0; } }
+.pcard.rar-3.flipped .pc-front { box-shadow: 0 0 0 3px rgba(255,255,255,.75), 0 0 50px 14px rgba(170,140,255,.65); animation: ur-glow 2s linear infinite; }
+@keyframes ur-glow { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+.pcard.rar-4.flipped .pc-front { box-shadow: 0 0 0 3px #ffe39a, 0 0 80px 26px rgba(255,205,100,.9); }
+.pack.special .pack-art { animation: aura 1.6s linear infinite; }
+@keyframes aura { 0% { box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 34px 10px hsla(320,95%,70%,.75); } 33% { box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 44px 14px hsla(200,95%,70%,.75); }
+  66% { box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 34px 10px hsla(60,95%,70%,.75); } 100% { box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 34px 10px hsla(320,95%,70%,.75); } }
+.pack-cut.rainbow { background: linear-gradient(90deg, #ff6ec4, #7873f5, #4adede, #a6ff7a, #ffe66d); box-shadow: 0 0 18px 6px rgba(255,255,255,.95), 0 -14px 60px 20px rgba(190,150,255,.65); }
+.pack-stage .glit { position: absolute; width: 7px; height: 7px; margin: -3px; z-index: 6; pointer-events: none; background: var(--c); border-radius: 1px;
+  box-shadow: 0 0 10px 2px var(--c); transform: rotate(45deg); animation: glit 1.6s cubic-bezier(.15,.7,.3,1) forwards; }
+@keyframes glit { 0% { opacity: 1; transform: translate(0, 0) rotate(45deg) scale(1.2); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 140px)) rotate(400deg) scale(.4); } }
+@media (prefers-reduced-motion: reduce) { .pack.special .pack-art, .pack-stage .glit, .rar-3 .rar-tag { animation: none !important; } }
 @keyframes stage-shake { 20% { transform: translate(-7px, 3px); } 40% { transform: translate(6px, -4px); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -1px); } }
 @media (prefers-reduced-motion: reduce) { .pcard.flipped .pc-inner, .pcard.flipped::after, .pack-stage.shake { animation: none !important; } }
 .pc-shine { pointer-events: none; opacity: 0; box-shadow: none;
@@ -2713,15 +2734,37 @@ function maybeOpenPack() {
   }
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+/* Wall rarity: every card gets a rarity on reveal (no commons); very rare packs glitter */
+const RARITY = [null,
+  { s: "★", name: "RARE" }, { s: "★★", name: "DOUBLE RARE" },
+  { s: "★★★", name: "ULTRA RARE" }, { s: "👑", name: "CROWN RARE" }];
+function rollRarity(isLast) {
+  const r = Math.random();
+  if (isLast) return DEMO ? (r < 0.6 ? 3 : 4) : (r < 0.55 ? 2 : r < 0.85 ? 3 : 4); // last card: at least ★★
+  return r < 0.5 ? 1 : r < 0.82 ? 2 : r < 0.95 ? 3 : 4;
+}
+function glitterBurst(count) {
+  const stage = $("packStage"), pack = $("pack").getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  const x0 = pack.left - sr.left + pack.width / 2, y0 = pack.top - sr.top + pack.height * 0.07;
+  for (let i = 0; i < count; i++) {
+    const b = document.createElement("i"); b.className = "glit";
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.4, d = 120 + Math.random() * 320;
+    b.style.left = `${x0 + (Math.random() - 0.5) * pack.width * 0.8}px`; b.style.top = `${y0}px`;
+    b.style.setProperty("--dx", `${Math.cos(a) * d}px`); b.style.setProperty("--dy", `${Math.sin(a) * d}px`);
+    b.style.setProperty("--c", `hsl(${Math.floor(Math.random() * 360)},95%,72%)`);
+    b.style.animationDelay = `${Math.random() * 0.25}s`;
+    stage.append(b); setTimeout(() => b.remove(), 1900);
+  }
+}
 /* A real rip: the top strip peels up along a jagged foil edge, light pours out, flakes fly */
-function tearPack(dur) {
+function tearPack(dur, special) {
   const pack = $("pack"), art = $("packImg"), top = $("packTop"), cut = $("packCut"), TY = 6.5, STRIP = 9;
   const R = rng(Math.floor(Math.random() * 1e6)), N = 34, pts = [];
   for (let i = 0; i <= N; i++) pts.push([(i / N) * 100, TY + (i % 2 ? 0.7 : -0.45) + (R() - 0.5) * 0.7]);
   top.style.height = STRIP + "%";
   top.style.clipPath = "polygon(0 0, 100% 0, " + pts.slice().reverse().map(([x, y]) => `${x.toFixed(2)}% ${(y / STRIP * 100).toFixed(2)}%`).join(", ") + ")";
   top.style.transformOrigin = "100% 75%";
-  cut.style.opacity = "1";
+  cut.style.opacity = "1"; cut.classList.toggle("rainbow", !!special);
   let lastBit = 0;
   const start = performance.now();
   return new Promise((res) => {
@@ -2739,6 +2782,7 @@ function tearPack(dur) {
           b.style.setProperty("--dx", `${Math.round(Math.random() * 70 - 15)}px`);
           b.style.setProperty("--dy", `${Math.round(-30 - Math.random() * 70)}px`);
           b.style.setProperty("--r", `${Math.round(Math.random() * 720)}deg`);
+          if (special) { const c = `hsl(${Math.floor(Math.random() * 360)},95%,72%)`; b.style.background = c; b.style.boxShadow = `0 0 8px ${c}`; }
           pack.append(b); setTimeout(() => b.remove(), 1000);
         }
       }
@@ -2757,22 +2801,25 @@ async function openPack(ids) {
   { const pt = $("packTop"); ["transform", "opacity", "transition", "clipPath", "height", "transformOrigin"].forEach(k => pt.style[k] = ""); $("packImg").style.clipPath = ""; cut.style.cssText = ""; }
   cardsBox.classList.add("behind");
   const key = packKeyFor(ids), art = await getPackArt(key);
+  const rar = ids.map((_, i) => rollRarity(i === ids.length - 1 && ids.length > 1)), best = Math.max(...rar), special = best >= 3;
   if (art) { $("packImg").src = art; $("packTop").style.backgroundImage = `url("${art}")`; }
   stage.hidden = false;
   // 1. pack drops in and settles
   void pack.offsetWidth; pack.classList.add("in");
+  if (special) pack.classList.add("special");
   await sleep(1500 * T);
   // 2. a glowing line slowly slices across the top of the wrapper
-  cap.textContent = "Opening…";
-  await tearPack(1700);
+  cap.textContent = best >= 4 ? "👑 Something legendary…" : special ? "✨ Something special…" : "Opening…";
+  await tearPack(special ? 2000 : 1700, special);
   pack.classList.add("torn"); flash(true);
+  if (special) glitterBurst(best >= 4 ? 110 : 70);
   cut.style.transition = "opacity .5s"; cut.style.opacity = "0";
   { const pt = $("packTop"); pt.style.transition = "transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s"; pt.style.transform = "translate(9vh, -26vh) rotate(32deg)"; pt.style.opacity = "0"; }
   // 3. the stack rises out of the opening, then the wrapper slides away
   const back = "card-back.webp", n = ids.length;
   const els = ids.map((id, i) => {
-    const el = document.createElement("div"); el.className = "pcard";
-    el.innerHTML = `<div class="pc-inner"><img class="pc-face pc-front" alt="New card"><div class="pc-face pc-shine"></div><img class="pc-face pc-back" alt=""></div>`;
+    const el = document.createElement("div"); el.className = `pcard rar-${rar[i]}`;
+    el.innerHTML = `<div class="pc-inner"><img class="pc-face pc-front" alt="New card"><div class="pc-face pc-shine"></div><img class="pc-face pc-back" alt=""></div><div class="rar-tag"><span class="st">${RARITY[rar[i]].s}</span> ${RARITY[rar[i]].name}</div>`;
     el.querySelector(".pc-front").src = cardSrc(id);
     const bk = el.querySelector(".pc-back"); bk.onerror = () => { bk.onerror = null; bk.src = makeCardBack(); }; bk.src = back;
     el.style.zIndex = String(100 - i);
@@ -2804,7 +2851,9 @@ async function openPack(ids) {
     el.classList.remove("tease");
     if (last) el.classList.add("rare");
     el.classList.add("flipped");
-    if (last) setTimeout(() => { flash(false); cap.textContent = "✨ Rare pull!"; stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }, 780);
+    setTimeout(() => el.classList.add("shown"), last ? 900 : 560);
+    if (last) setTimeout(() => { flash(false); cap.textContent = rar[i] >= 4 ? "👑 Crown pull!" : "✨ Rare pull!"; stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }, 780);
+    else if (rar[i] >= 3) setTimeout(() => { flash(false); glitterBurst(30); }, 420);
     await sleep((last ? 3400 : 2100) * T);
     const off = i - (n - 1) / 2;
     el.style.zIndex = String(10 + i);
