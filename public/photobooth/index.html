@@ -698,8 +698,8 @@ body.unfold .app, body.unfold header.top, body.unfold .show-stage, body.unfold .
 <div id="print-root"></div>
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 (() => {
 "use strict";
@@ -3175,7 +3175,7 @@ async function startCamera(deviceId) {
     $("camMsg").hidden = true; $("camBtn").textContent = "Stop camera";
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
     const sel = $("camSelect"), cur = stream.getVideoTracks()[0]?.getSettings().deviceId;
-    sel.innerHTML = devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${d.label || "Camera " + (i + 1)}</option>`).join("");
+    sel.replaceChildren(...devs.map((d, i) => { const o = new Option(d.label || `Camera ${i + 1}`, d.deviceId); o.selected = d.deviceId === cur; return o; }));
   } catch (err) {
     $("camMsg").hidden = false;
     $("camMsg").textContent = err.name === "NotAllowedError" ? "Camera access was blocked. Allow the camera in your browser's address bar, then press Start camera again." : "Couldn't start the camera (" + err.name + "). Check that no other app is using it, or use Upload photo.";
@@ -3509,7 +3509,7 @@ async function fetchIds() {
   const r = await api("GET");
   if (r.status === 401) { ls.set("dh-pass", ""); if (await askCode("Enter the event code to see the Card Wall.")) return fetchIds(); return null; }
   if (!r.ok) { $("wallCount").textContent = r.data.error || "Couldn't load the wall. Retrying…"; return null; }
-  return r.data.cards || [];
+  return (Array.isArray(r.data.cards) ? r.data.cards : []).filter(id => typeof id === "string" && /^\d{13}-[a-z0-9]{1,8}-[a-z]{1,6}$/.test(id));
 }
 async function loadWall() {
   const ids = await fetchIds(); if (!ids) return;
