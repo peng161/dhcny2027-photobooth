@@ -495,7 +495,7 @@ function paintLikeBtn() {
   const on = isLiked(featId);
   b.setAttribute("aria-pressed", String(on));
   b.setAttribute("aria-label", `${on ? "Unlike" : "Like"} this card. ${likeCount(featId)} likes`);
-  $("likeHeart").textContent = on ? "❤️" : "🤍"; $("likeWord").textContent = on ? "Liked" : "Like"; $("likeN").textContent = likeCount(featId);
+  $("likeWord").textContent = on ? "Liked" : "Like"; $("likeN").textContent = likeCount(featId);
   // first time on a phone: point at the button once
   if (!isTV() && !ls.get(key("liketip")) && $("likeTip").hidden && !packPlaying) {
     $("likeTip").hidden = false; ls.set(key("liketip"), "1");
