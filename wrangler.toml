@@ -7,3 +7,9 @@ compatibility_date = "2026-10-01"
 [[kv_namespaces]]
 binding = "CARDS"
 id = "c4628d97b0044646a30d80b296ea2946"
+
+# Card index + likes (free D1). The API creates its tables on first use.
+[[d1_databases]]
+binding = "DB"
+database_name = "dhcny2027-wall"
+database_id = "d70b2128-9cf8-4f7f-827b-1195838d5f09"
