@@ -234,11 +234,12 @@
     <div class="show-stage">
       <div class="glow" aria-hidden="true"></div>
       <div class="feat-wrap" id="featWrap">
-        <div class="feat"><img id="featImg" alt="Featured card"><div class="feat-shine"></div></div>
+        <div class="feat"><img id="featImg" alt="Featured card"><div class="feat-shine"></div><div class="heart-burst" id="heartBurst" aria-hidden="true">❤️</div></div>
       </div>
       <div class="feat-cap">
         <span class="badge-new" id="featBadge" hidden>✨ New card!</span>
-        <button class="like-btn" id="likeBtn" type="button" aria-pressed="false" hidden><span id="likeHeart" aria-hidden="true">🤍</span> <b id="likeN">0</b></button>
+        <span class="like-wrap"><button class="like-btn" id="likeBtn" type="button" aria-pressed="false" hidden><span class="heart" id="likeHeart" aria-hidden="true">🤍</span><span id="likeWord">Like</span><b id="likeN">0</b></button>
+          <span class="like-tip" id="likeTip" hidden>Tap to like your favourite card<br><small>or double-tap the card</small></span></span>
         <span id="showCount"></span>
         <span class="pack-count" id="packCount"></span>
       </div>

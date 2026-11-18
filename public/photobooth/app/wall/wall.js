@@ -495,7 +495,12 @@ function paintLikeBtn() {
   const on = isLiked(featId);
   b.setAttribute("aria-pressed", String(on));
   b.setAttribute("aria-label", `${on ? "Unlike" : "Like"} this card. ${likeCount(featId)} likes`);
-  $("likeHeart").textContent = on ? "❤️" : "🤍"; $("likeN").textContent = likeCount(featId);
+  $("likeHeart").textContent = on ? "❤️" : "🤍"; $("likeWord").textContent = on ? "Liked" : "Like"; $("likeN").textContent = likeCount(featId);
+  // first time on a phone: point at the button once
+  if (!isTV() && !ls.get(key("liketip")) && $("likeTip").hidden && !packPlaying) {
+    $("likeTip").hidden = false; ls.set(key("liketip"), "1");
+    setTimeout(() => { $("likeTip").hidden = true; }, 7000);
+  }
 }
 function paintChip(f) {
   const id = f.dataset.id, chip = f.querySelector(".like-chip"); if (!chip) return;
@@ -633,14 +638,28 @@ $("modeGrid").addEventListener("click", () => setWallMode("grid"));
   holdUntil = Date.now() + 25000;               // keep it there while they decide
   pullToCentre(im.dataset.id, false);
 }));
-$("likeBtn").addEventListener("click", () => {
-  if (!featId) return;
+function likeFeatured(fromCard) {
+  if (!featId || !likesOn()) return;
   holdUntil = Math.max(holdUntil, Date.now() + 12000);
+  $("likeTip").hidden = true;
+  if (fromCard && isLiked(featId)) { burst(); return; }      // double-tap only ever likes, never unlikes
   toggleLike(featId);
+  if (isLiked(featId)) burst();
   const b = $("likeBtn"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
-});
+}
+function burst() { const h = $("heartBurst"); h.classList.remove("go"); void h.offsetWidth; h.classList.add("go"); }
+$("likeBtn").addEventListener("click", () => likeFeatured(false));
+$("likeTip").addEventListener("click", () => { $("likeTip").hidden = true; });
 $("sortBtn").addEventListener("click", () => { gridSort = gridSort === "likes" ? "new" : "likes"; ls.set(key("wallsort"), gridSort); sortGrid(); });
 $("fullBtn").addEventListener("click", () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); } catch {} });
-$("featImg").addEventListener("click", () => { $("wallViewImg").src = $("featImg").src; $("wallView").hidden = false; });
+// centre card: double-tap likes it; a single tap opens it full size
+let lastTap = 0, tapTimer = 0;
+$("featImg").addEventListener("click", () => {
+  const now = Date.now();
+  if (likesOn() && now - lastTap < 320) { clearTimeout(tapTimer); lastTap = 0; likeFeatured(true); return; }
+  lastTap = now;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { $("wallViewImg").src = $("featImg").src; $("wallView").hidden = false; }, likesOn() ? 330 : 0);
+});
 $("e-admin").value = getAdminKey();
 $("e-admin").addEventListener("input", (e) => ls.set(key("admin"), e.target.value.trim()));
