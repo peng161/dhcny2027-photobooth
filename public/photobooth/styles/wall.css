@@ -229,3 +229,19 @@ body.wall-mode > *:not(#wall):not(.viewer):not(.toast):not(.flyer):not(script) {
 @media (prefers-reduced-motion: reduce) { .track, .feat, .feat-shine, .glow, .sparks span, .feat-wrap.flip, .badge-new { animation: none !important; } }
 .card-ico { width: 1.5em; height: 1.5em; vertical-align: -0.35em; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.35)); }
 .make-card { display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
+
+/* likes: centre-card button, grid chips, medals, tappable rows */
+.track img { cursor: pointer; }
+.like-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid rgba(255,230,170,.65); background: rgba(10,6,12,.55); color: #fff; font: 800 18px var(--font-display);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35); transition: background .2s, border-color .2s; }
+.like-btn[aria-pressed="true"] { background: #d92b48; border-color: #ffb3c0; }
+.like-btn b { font-weight: 800; min-width: 1ch; }
+.like-chip { position: absolute; left: 8px; bottom: 8px; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.6); background: rgba(10,6,12,.62); color: #fff; font: 700 13px var(--font-body); }
+.like-chip[aria-pressed="true"] { background: #d92b48; border-color: #ffb3c0; }
+.like-btn.pop, .like-chip.pop { animation: like-pop .35s ease-out; }
+@keyframes like-pop { 40% { transform: scale(1.25); } }
+.wall-grid .medal { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 34px; z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); pointer-events: none; }
+#wall.show-mode #sortBtn { display: none; }
+@media (prefers-reduced-motion: reduce) { .like-btn.pop, .like-chip.pop { animation: none; } }

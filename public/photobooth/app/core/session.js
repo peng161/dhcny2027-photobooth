@@ -21,12 +21,12 @@ export function askCode(message) {
   });
 }
 export async function ensureCode(msg) { return DEMO || getPass() ? true : !!(await askCode(msg)); }
-export async function api(method, query = "", body) {
+export async function api(method, query = "", body, path = API) {
   const headers = { "x-pass": getPass() };
   if (getAdminKey()) headers["x-admin"] = getAdminKey();
   if (body) headers["content-type"] = "application/json";
   try {
-    const r = await fetch(API + query, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const r = await fetch(path + query, { method, headers, body: body ? JSON.stringify(body) : undefined });
     let data = {}; try { data = await r.json(); } catch {}
     return { ok: r.ok, status: r.status, data };
   } catch { return { ok: false, status: 0, data: { error: "No connection. Check your Wi-Fi or data and try again." } }; }

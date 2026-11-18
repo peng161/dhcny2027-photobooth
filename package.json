@@ -1,0 +1,8 @@
+{
+  "name": "card-booth",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tools/test-api.mjs && node tools/check-css.mjs"
+  }
+}

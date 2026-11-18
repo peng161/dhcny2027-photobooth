@@ -1,49 +1,16 @@
-// Card Wall API on Cloudflare Pages Functions, storing card images in Workers KV (binding CARDS).
+// Card Wall API on Cloudflare Pages Functions. Card images live in Workers KV (binding CARDS);
+// the card index and likes live in D1 (binding DB) when it is set up.
 // Access needs the event code (BOARD_PASS); deleting needs the organiser key (ADMIN_KEY).
+import { ID_RE, SEC, db, guard, json, limited } from "../../lib/guard.js";
+
 const MAX_BYTES = 2_500_000;          // decoded JPEG
 const MAX_BODY = 3_600_000;           // base64 JSON body
-const ID_RE = /^\d{13}-[a-z0-9]{1,8}-[a-z]{1,6}$/;
-const SEC = { "x-content-type-options": "nosniff", "referrer-policy": "no-referrer" };
-const json = (data, status = 200, extra = {}) =>
-  new Response(JSON.stringify(data), { status, headers: { ...SEC, "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extra } });
-
-// Constant-time comparison so the codes can't be guessed from response timing.
-function same(a, b) {
-  const x = new TextEncoder().encode(a), y = new TextEncoder().encode(b);
-  let diff = x.length ^ y.length;
-  for (let i = 0; i < Math.max(x.length, y.length); i++) diff |= (x[i] || 0) ^ (y[i] || 0);
-  return diff === 0;
-}
-
-// Best-effort limits kept in this worker's memory (each Cloudflare location keeps its own count).
-// Generous on purpose: staff on the same office Wi-Fi share one IP address.
-const hits = new Map();
-function limited(key, max, windowMs) {
-  const now = Date.now(), h = hits.get(key);
-  if (!h || now - h.t > windowMs) { hits.set(key, { t: now, n: 1 }); if (hits.size > 5000) hits.clear(); return false; }
-  h.n += 1;
-  return h.n > max;
-}
 
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
-  const BOARD = env.BOARD_PASS || "", ADMIN = env.ADMIN_KEY || "";
-  const sentAdmin = request.headers.get("x-admin") || "";
-  const isAdmin = !!ADMIN && !!sentAdmin && same(sentAdmin, ADMIN);
-  // Images are loaded by <img>, which can't send headers, so only image GETs may carry the code in the URL.
-  const imageGet = request.method === "GET" && url.searchParams.has("id");
-  const pass = (request.headers.get("x-pass") || (imageGet ? url.searchParams.get("pass") : "") || "").trim().toUpperCase();
-  const passOk = !BOARD || same(pass, BOARD.toUpperCase());
-
-  if (sentAdmin && !isAdmin) {
-    if (limited(`bad-admin:${ip}`, 10, 10 * 60_000)) return json({ error: "Too many tries. Wait a few minutes." }, 429, { "retry-after": "600" });
-    return json({ error: "That organiser key isn't right." }, 403);
-  }
-  if (!passOk && !isAdmin) {
-    if (limited(`bad-pass:${ip}`, 60, 10 * 60_000)) return json({ error: "Too many tries. Wait a few minutes." }, 429, { "retry-after": "600" });
-    return json({ error: "That event code isn't right. Check the code shown at the booth." }, 401);
-  }
+  const g = guard(request, env, url);
+  if (g.res) return g.res;
+  const { ip, isAdmin, imageGet } = g;
   const kv = env.CARDS;
 
   if (request.method === "GET") {
@@ -54,8 +21,16 @@ export async function onRequest({ request, env }) {
       if (!data) return new Response("Not found", { status: 404, headers: SEC });
       return new Response(data, { headers: { ...SEC, "content-type": "image/jpeg", "content-disposition": "inline", "content-security-policy": "default-src 'none'; sandbox", "cache-control": "private, max-age=86400" } });
     }
+    const D = await db(env);
+    if (D) {
+      const [cards, likes] = await D.batch([
+        D.prepare("SELECT id FROM cards ORDER BY id LIMIT 500"),                       // ids sort newest first
+        D.prepare("SELECT card, COUNT(*) AS n FROM likes GROUP BY card"),
+      ]);
+      return json({ cards: cards.results.map((r) => r.id).filter((n) => ID_RE.test(n)), likes: Object.fromEntries(likes.results.map((r) => [r.card, r.n])) });
+    }
     const { keys } = await kv.list({ limit: 1000 });
-    return json({ cards: keys.map((k) => k.name).filter((n) => ID_RE.test(n)).sort().slice(0, 500) }); // keys sort newest first
+    return json({ cards: keys.map((k) => k.name).filter((n) => ID_RE.test(n)).sort().slice(0, 500), likes: null });
   }
 
   if (request.method === "POST") {
@@ -82,6 +57,8 @@ export async function onRequest({ request, env }) {
     const rand = [...crypto.getRandomValues(new Uint8Array(6))].map((b) => (b % 36).toString(36)).join("");
     const id = `${String(9999999999999 - Date.now()).padStart(13, "0")}-${rand}-${cluster}`;
     await kv.put(id, bytes.buffer);
+    const D = await db(env);
+    if (D) await D.prepare("INSERT OR IGNORE INTO cards (id, team, at) VALUES (?, ?, ?)").bind(id, cluster, Date.now()).run();
     return json({ id });
   }
 
@@ -90,6 +67,8 @@ export async function onRequest({ request, env }) {
     const id = url.searchParams.get("id") || "";
     if (!ID_RE.test(id)) return json({ error: "Missing card id." }, 400);
     await kv.delete(id);
+    const D = await db(env);
+    if (D) await D.batch([D.prepare("DELETE FROM cards WHERE id = ?").bind(id), D.prepare("DELETE FROM likes WHERE card = ?").bind(id)]);
     return json({ ok: true });
   }
   return json({ error: "Not supported." }, 405, { allow: "GET, POST, DELETE" });

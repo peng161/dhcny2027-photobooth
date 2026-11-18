@@ -1,7 +1,7 @@
 import { fillForm } from "../booth/editor.js";
 import { download } from "../booth/gallery.js";
 import { postToWall } from "../booth/post.js";
-import { cx, render } from "../booth/preview.js";
+import { render } from "../booth/preview.js";
 import { doPrint, setPage } from "../booth/print.js";
 import { card, event, photo } from "../booth/state.js";
 import { drawMascotMark } from "../cards/kit.js";
@@ -11,9 +11,13 @@ import { $, H, W, fitFont, rng, rr, toast, wrap } from "../core/util.js";
 import { WALL_BGS, bgRaf, setWallBg, wallBg } from "./backgrounds.js";
 import { makeDemoCard, makeDemoCards } from "./demo.js";
 import { getPackArt, packKeyFor } from "./packart.js";
+import { demoCounts, isLiked, likeCount, likesOn, onLikes, setCounts, toggleLike, topLiked } from "./likes.js";
 /* --- wall data --- */
 export let wallTimer = 0, cycleTimer = 0, demoTimer = 0, wallList = [], wallLoaded = false, featIdx = 0, holdUntil = 0;
-export let wallMode = ls.get(key("wallmode")) || (innerWidth >= 900 ? "show" : "grid");
+export let wallMode = ls.get(key("wallmode")) || "show";
+export let featId = "", gridSort = ls.get(key("wallsort")) || "new", nextBadge = "", cycleCount = 0;
+/** TV mode: the big screen (shows the QR code). Otherwise it is a staff phone: tap cards, like them. */
+export const isTV = () => new URLSearchParams(location.search).has("tv") || (matchMedia("(pointer: fine)").matches && innerWidth >= 900);
 export const imgUrl = (id) => `${API}?id=${encodeURIComponent(id)}&pass=${encodeURIComponent(getPass())}`;
 export const cardSrc = (id) => (DEMO ? demoCards.get(id) : imgUrl(id));
 export function wallFigure(id) {
@@ -21,6 +25,10 @@ export function wallFigure(id) {
   const img = document.createElement("img"); img.loading = "lazy"; img.alt = EVENT.brand.cardAlt; img.src = cardSrc(id);
   img.addEventListener("click", () => { $("wallViewImg").src = img.src; $("wallView").hidden = false; });
   f.append(img);
+  const like = document.createElement("button"); like.type = "button"; like.className = "like-chip"; like.hidden = !likesOn();
+  like.addEventListener("click", (e) => { e.stopPropagation(); toggleLike(id); like.classList.remove("pop"); void like.offsetWidth; like.classList.add("pop"); });
+  const medal = document.createElement("span"); medal.className = "medal"; medal.hidden = true;
+  f.append(like, medal); paintChip(f);
   if (getAdminKey() && !DEMO) {
     const del = document.createElement("button"); del.type = "button"; del.className = "btn del"; del.textContent = "Remove";
     del.addEventListener("click", async () => {
@@ -35,15 +43,17 @@ export function wallFigure(id) {
 export function updateWallCount() {
   const n = wallList.length;
   const txt = n ? `${n} card${n === 1 ? "" : "s"} · updates live` : "";
-  $("wallCount").textContent = txt; $("showCount").textContent = txt;
+  $("wallCount").textContent = txt;
+  $("showCount").textContent = n && likesOn() && !isTV() ? "Tap a card to see it · ❤️ to like" : txt;
   $("wallEmpty").hidden = n > 0;
   $("showEmpty").hidden = n > 0;
 }
 export async function fetchIds() {
-  if (DEMO) return [...demoCards.keys()].sort().reverse();
+  if (DEMO) { const ids = [...demoCards.keys()].sort().reverse(); demoCounts(ids); return ids; }
   const r = await api("GET");
   if (r.status === 401) { ls.set(key("pass"), ""); if (await askCode("Enter the event code to see the Card Wall.")) return fetchIds(); return null; }
   if (!r.ok) { $("wallCount").textContent = r.data.error || "Couldn't load the wall. Retrying…"; return null; }
+  setCounts(r.data.likes ?? null);
   return (Array.isArray(r.data.cards) ? r.data.cards : []).filter(id => typeof id === "string" && /^\d{13}-[a-z0-9]{1,8}-[a-z]{1,6}$/.test(id));
 }
 export async function loadWall() {
@@ -54,7 +64,7 @@ export async function loadWall() {
   [...grid.children].forEach(f => { if (!live.has(f.dataset.id)) f.remove(); });
   const have = new Set([...grid.children].map(f => f.dataset.id));
   ids.slice().reverse().forEach(id => { if (!have.has(id)) grid.prepend(wallFigure(id)); });
-  updateWallCount();
+  sortGrid(); updateWallCount();
   if (!wallLoaded) {
     const seen = new Set(), unseen = ids.slice();   // every visit replays the booster opening with all the cards
     ids.forEach(id => { if (seen.has(id)) revealed.add(id); });
@@ -440,10 +450,9 @@ export async function pullToCentre(id, isNew) {
   const pre = new Image(); pre.src = cardSrc(id);
   await sleep(120);
   const f = await flyCard(cardSrc(id), { x: sr.left + sr.width / 2, y: sr.top + sr.height / 2, w: sr.width }, target, { dur: 1150, lift: 0.1 });
-  img.src = cardSrc(id);
+  img.src = cardSrc(id); setFeatured(id, isNew);
   try { await img.decode(); } catch {}
   out.cancel(); void wrap.offsetWidth; wrap.classList.add("arrive");
-  $("featBadge").hidden = !isNew;
   if (isNew) holdUntil = Date.now() + 9000;
   f.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: "forwards" });
   setTimeout(() => f.remove(), 300);
@@ -470,13 +479,53 @@ export function feature(id, isNew) {
   const wrap = $("featWrap"), img = $("featImg");
   featIdx = Math.max(0, shownList().indexOf(id));
   wrap.classList.remove("flip"); void wrap.offsetWidth; wrap.classList.add("flip");
-  img.src = cardSrc(id);
-  $("featBadge").hidden = !isNew;
+  img.src = cardSrc(id); setFeatured(id, isNew);
   if (isNew) holdUntil = Date.now() + 9000;
 }
+/* the centre card: its badge and like button */
+function setFeatured(id, isNew) {
+  featId = id;
+  const badge = isNew ? "✨ New card!" : nextBadge; nextBadge = "";
+  $("featBadge").textContent = badge; $("featBadge").hidden = !badge;
+  paintLikeBtn();
+}
+function paintLikeBtn() {
+  const b = $("likeBtn"); b.hidden = !likesOn() || !featId;
+  if (b.hidden) return;
+  const on = isLiked(featId);
+  b.setAttribute("aria-pressed", String(on));
+  b.setAttribute("aria-label", `${on ? "Unlike" : "Like"} this card. ${likeCount(featId)} likes`);
+  $("likeHeart").textContent = on ? "❤️" : "🤍"; $("likeN").textContent = likeCount(featId);
+}
+function paintChip(f) {
+  const id = f.dataset.id, chip = f.querySelector(".like-chip"); if (!chip) return;
+  chip.hidden = !likesOn();
+  chip.textContent = `${isLiked(id) ? "❤️" : "🤍"} ${likeCount(id)}`;
+  chip.setAttribute("aria-pressed", String(isLiked(id)));
+  chip.setAttribute("aria-label", `${isLiked(id) ? "Unlike" : "Like"} this card. ${likeCount(id)} likes`);
+}
+/** Grid order: newest first, or most liked first with medals for the top three. */
+export function sortGrid() {
+  const grid = $("wallGrid"), figs = [...grid.children];
+  const top = likesOn() ? topLiked(wallList, 3) : [];
+  figs.forEach(f => { const m = f.querySelector(".medal"), r = top.indexOf(f.dataset.id); if (m) { m.hidden = r < 0; m.textContent = ["🥇", "🥈", "🥉"][r] || ""; } paintChip(f); });
+  const byLikes = gridSort === "likes" && likesOn();
+  figs.sort((a, b) => (byLikes ? likeCount(b.dataset.id) - likeCount(a.dataset.id) : 0) || (a.dataset.id < b.dataset.id ? -1 : 1));
+  figs.forEach(f => grid.append(f));
+  $("sortBtn").hidden = !likesOn();
+  $("sortBtn").innerHTML = gridSort === "likes" ? "🔥<span class=\"lbl\"> Most liked</span>" : "🕒<span class=\"lbl\"> Newest</span>";
+  $("sortBtn").setAttribute("aria-label", gridSort === "likes" ? "Sorted by most liked. Switch to newest" : "Sorted by newest. Switch to most liked");
+}
+onLikes((id) => {
+  paintLikeBtn(); updateWallCount();
+  if (id) { const f = $("wallGrid").querySelector(`figure[data-id="${CSS.escape(id)}"]`); if (f) paintChip(f); }
+  if (!id || gridSort === "likes") sortGrid();
+});
 export function cycle() {
   const list = shownList();
   if (!list.length || packPlaying || Date.now() < holdUntil) return;
+  const [best] = likesOn() ? topLiked(list, 1) : [];
+  if (best && ++cycleCount % 5 === 0 && best !== featId) { nextBadge = `🏆 Most liked · ❤️ ${likeCount(best)}`; pullToCentre(best, false); return; }
   pullToCentre(list[(featIdx + 1) % list.length], false);
 }
 export function setWallMode(m) {
@@ -503,8 +552,7 @@ export function wallActive() { $("wall").classList.remove("idle"); clearTimeout(
 ["mousemove", "pointerdown", "keydown", "touchstart"].forEach(ev => addEventListener(ev, () => { if (!$("wall").hidden) wallActive(); }, { passive: true }));
 export function makeWallQr() {
   // only the big screen needs a QR: a wide screen driven by a mouse (TV/laptop), or forced with ?tv
-  const tv = new URLSearchParams(location.search).has("tv") || (matchMedia("(pointer: fine)").matches && innerWidth >= 900);
-  if (!tv) { $("wallQr").hidden = true; return; }
+  if (!isTV()) { $("wallQr").hidden = true; return; }
   const base = `${location.origin}${location.pathname}`;
   const url = getPass() && !DEMO ? `${base}?code=${encodeURIComponent(getPass())}` : base;
   try { const q = qrcode(0, "M"); q.addData(url); q.make(); $("qrImg").src = q.createDataURL(8, 2); $("wallQr").hidden = false; } catch { $("wallQr").hidden = true; }
@@ -578,6 +626,20 @@ $("dlAllBtn").addEventListener("click", downloadAllCards);
 $("printAllBtn").addEventListener("click", printAllCards);
 $("bgBtn").addEventListener("click", () => { const keys = Object.keys(WALL_BGS); setWallBg(keys[(keys.indexOf(wallBg) + 1) % keys.length]); });
 $("modeGrid").addEventListener("click", () => setWallMode("grid"));
+// staff phones: tap any card in the rows to bring it to the centre, then like it
+["mqTop", "mqBot"].forEach(r => $(r).addEventListener("click", (e) => {
+  const im = e.target.closest("img[data-id]");
+  if (!im || packPlaying || im.classList.contains("pending")) return;
+  holdUntil = Date.now() + 25000;               // keep it there while they decide
+  pullToCentre(im.dataset.id, false);
+}));
+$("likeBtn").addEventListener("click", () => {
+  if (!featId) return;
+  holdUntil = Math.max(holdUntil, Date.now() + 12000);
+  toggleLike(featId);
+  const b = $("likeBtn"); b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+});
+$("sortBtn").addEventListener("click", () => { gridSort = gridSort === "likes" ? "new" : "likes"; ls.set(key("wallsort"), gridSort); sortGrid(); });
 $("fullBtn").addEventListener("click", () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); } catch {} });
 $("featImg").addEventListener("click", () => { $("wallViewImg").src = $("featImg").src; $("wallView").hidden = false; });
 $("e-admin").value = getAdminKey();
