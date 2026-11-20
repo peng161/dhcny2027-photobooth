@@ -1,8 +1,6 @@
 // Likes on Card Wall cards: one like per phone per card. Needs the event code.
-// POST { id, device, liked } -> { id, likes, liked }
-import { ID_RE, db, guard, json, limited } from "../../lib/guard.js";
-
-const DEVICE_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+// POST { id, liked, device? } -> { id, likes, liked }. The phone is known by a server cookie first.
+import { DEVICE_RE, ID_RE, db, guard, json, limited, phone } from "../../lib/guard.js";
 
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
@@ -17,13 +15,15 @@ export async function onRequest({ request, env }) {
   }
   let body;
   try { body = JSON.parse(await request.text()); } catch { return json({ error: "Bad request." }, 400); }
-  const id = typeof body?.id === "string" ? body.id : "", device = typeof body?.device === "string" ? body.device.toLowerCase() : "";
-  if (!ID_RE.test(id) || !DEVICE_RE.test(device) || typeof body?.liked !== "boolean") return json({ error: "Bad request." }, 400);
+  const id = typeof body?.id === "string" ? body.id : "";
+  if (!ID_RE.test(id) || typeof body?.liked !== "boolean") return json({ error: "Bad request." }, 400);
+  if (body.device !== undefined && !(typeof body.device === "string" && DEVICE_RE.test(body.device.toLowerCase()))) return json({ error: "Bad request." }, 400);
+  const { device, cookie } = phone(request, body.device);       // the server's cookie wins over what the page sends
   const exists = await D.prepare("SELECT 1 AS ok FROM cards WHERE id = ?").bind(id).first();
   if (!exists) return json({ error: "That card isn't on the wall any more." }, 404);
   const change = body.liked
     ? D.prepare("INSERT OR IGNORE INTO likes (card, device, at) VALUES (?, ?, ?)").bind(id, device, Date.now())
     : D.prepare("DELETE FROM likes WHERE card = ? AND device = ?").bind(id, device);
   const [, count] = await D.batch([change, D.prepare("SELECT COUNT(*) AS n FROM likes WHERE card = ?").bind(id)]);
-  return json({ id, likes: count.results[0]?.n ?? 0, liked: body.liked });
+  return json({ id, likes: count.results[0]?.n ?? 0, liked: body.liked }, 200, cookie);
 }

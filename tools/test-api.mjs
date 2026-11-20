@@ -16,6 +16,7 @@ const stmt = (sql, args = []) => ({
   async all() {
     if (/^SELECT id FROM cards/.test(sql)) return { results: [...T.cards.keys()].sort().slice(0, 500).map((id) => ({ id })) };
     if (/^SELECT card, COUNT/.test(sql)) { const c = {}; for (const k of T.likes.keys()) { const id = k.split("|")[0]; c[id] = (c[id] || 0) + 1; } return { results: Object.entries(c).map(([card, n]) => ({ card, n })) }; }
+    if (/^SELECT card FROM likes WHERE device/.test(sql)) return { results: [...T.likes.keys()].filter((k) => k.endsWith("|" + args[0])).map((k) => ({ card: k.split("|")[0] })) };
     if (/^SELECT COUNT\(\*\) AS n FROM likes WHERE card/.test(sql)) return { results: [{ n: [...T.likes.keys()].filter((k) => k.startsWith(args[0] + "|")).length }] };
     return { results: [] };
   },
@@ -47,7 +48,7 @@ const call = async (fn, method, path, q = "", headers = {}, body, ip = "1.1.1.1"
   if (body !== undefined) { init.body = typeof body === "string" ? body : JSON.stringify(body); init.headers["content-type"] ||= "application/json"; }
   const r = await fn({ request: new Request(`https://x.test/api/${path}${q}`, init), env: e });
   let t = ""; try { t = r.headers.get("content-type")?.includes("json") ? JSON.stringify(await r.json()) : `${(await r.arrayBuffer()).byteLength} bytes`; } catch {}
-  return [r.status, t, r.headers.get("x-content-type-options"), r.headers.get("content-security-policy")];
+  return [r.status, t, r.headers.get("x-content-type-options"), r.headers.get("content-security-policy"), r.headers.get("set-cookie")];
 };
 const cards = (...a) => call(cardsApi, a[0], "cards", ...a.slice(1));
 const likes = (...a) => call(likesApi, a[0], "likes", ...a.slice(1));
@@ -86,6 +87,19 @@ const list = await cards("GET", "", P);
 out.push(`${JSON.parse(list[1]).likes?.[id] === 2 ? "PASS" : "FAIL"}  card list includes like counts`);
 const ul = await t("unlike", likes("POST", "", P, { id, device: DEV, liked: false }), 200);
 out.push(`${JSON.parse(ul[1]).likes === 1 ? "PASS" : "FAIL"}  unlike lowers the count`);
+// the server's cookie decides which phone it is, so a wiped page id can't like twice
+const CK = { ...P, cookie: `wall_device=${DEV2}` };
+const c1 = await t("like with the phone cookie but a new page id", likes("POST", "", CK, { id, device: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", liked: true }), 200);
+out.push(`${JSON.parse(c1[1]).likes === 1 ? "PASS" : "FAIL"}  cookie wins: same phone still counts once`);
+const c2 = await t("like with the phone cookie and no page id", likes("POST", "", CK, { id, liked: true }), 200);
+out.push(`${JSON.parse(c2[1]).likes === 1 ? "PASS" : "FAIL"}  no page id needed when the cookie is there`);
+out.push(`${/wall_device=[0-9a-f-]{36}; Path=\/api;.*HttpOnly; Secure; SameSite=Strict/.test(c2[4] || "") ? "PASS" : "FAIL"}  sets an HttpOnly, Secure phone cookie`);
+const lm = await cards("GET", "", CK);
+out.push(`${JSON.parse(lm[1]).mine?.includes(id) ? "PASS" : "FAIL"}  card list says which cards this phone liked`);
+const ln = await cards("GET", "", { ...P, "x-device": DEV });
+out.push(`${JSON.parse(ln[1]).mine?.length === 0 ? "PASS" : "FAIL"}  another phone's list doesn't show them`);
+const ev = await t("bad cookie value is ignored", likes("POST", "", { ...P, cookie: "wall_device=<x>" }, { id, liked: true }), 200);
+out.push(`${JSON.parse(ev[1]).likes === 2 ? "PASS" : "FAIL"}  a bad cookie just gets a fresh phone id`);
 await t("likes off without D1", likes("POST", "", P, { id, device: DEV, liked: true }, "1.1.1.1", envNoDb), 501);
 await t("GET on likes not allowed", likes("GET", "", P), 405);
 

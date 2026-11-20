@@ -53,7 +53,7 @@ export async function fetchIds() {
   const r = await api("GET");
   if (r.status === 401) { ls.set(key("pass"), ""); if (await askCode("Enter the event code to see the Card Wall.")) return fetchIds(); return null; }
   if (!r.ok) { $("wallCount").textContent = r.data.error || "Couldn't load the wall. Retrying…"; return null; }
-  setCounts(r.data.likes ?? null);
+  setCounts(r.data.likes ?? null, r.data.mine);
   return (Array.isArray(r.data.cards) ? r.data.cards : []).filter(id => typeof id === "string" && /^\d{13}-[a-z0-9]{1,8}-[a-z]{1,6}$/.test(id));
 }
 export async function loadWall() {

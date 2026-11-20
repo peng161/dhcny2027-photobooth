@@ -1,7 +1,7 @@
 // Card Wall API on Cloudflare Pages Functions. Card images live in Workers KV (binding CARDS);
 // the card index and likes live in D1 (binding DB) when it is set up.
 // Access needs the event code (BOARD_PASS); deleting needs the organiser key (ADMIN_KEY).
-import { ID_RE, SEC, db, guard, json, limited } from "../../lib/guard.js";
+import { ID_RE, SEC, db, guard, json, limited, phone } from "../../lib/guard.js";
 
 const MAX_BYTES = 2_500_000;          // decoded JPEG
 const MAX_BODY = 3_600_000;           // base64 JSON body
@@ -23,11 +23,17 @@ export async function onRequest({ request, env }) {
     }
     const D = await db(env);
     if (D) {
-      const [cards, likes] = await D.batch([
+      const { device, cookie } = phone(request);
+      const [cards, likes, mine] = await D.batch([
         D.prepare("SELECT id FROM cards ORDER BY id LIMIT 500"),                       // ids sort newest first
         D.prepare("SELECT card, COUNT(*) AS n FROM likes GROUP BY card"),
+        D.prepare("SELECT card FROM likes WHERE device = ?").bind(device),            // what this phone already liked
       ]);
-      return json({ cards: cards.results.map((r) => r.id).filter((n) => ID_RE.test(n)), likes: Object.fromEntries(likes.results.map((r) => [r.card, r.n])) });
+      return json({
+        cards: cards.results.map((r) => r.id).filter((n) => ID_RE.test(n)),
+        likes: Object.fromEntries(likes.results.map((r) => [r.card, r.n])),
+        mine: mine.results.map((r) => r.card),
+      }, 200, cookie);
     }
     const { keys } = await kv.list({ limit: 1000 });
     return json({ cards: keys.map((k) => k.name).filter((n) => ID_RE.test(n)).sort().slice(0, 500), likes: null });

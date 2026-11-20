@@ -21,8 +21,18 @@ export function askCode(message) {
   });
 }
 export async function ensureCode(msg) { return DEMO || getPass() ? true : !!(await askCode(msg)); }
+/** A random id for this phone. The server also remembers the phone in its own cookie. */
+export function deviceId() {
+  let d = ls.get(key("device"));
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(d)) {
+    d = crypto.randomUUID ? crypto.randomUUID()
+      : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16));
+    ls.set(key("device"), d);
+  }
+  return d;
+}
 export async function api(method, query = "", body, path = API) {
-  const headers = { "x-pass": getPass() };
+  const headers = { "x-pass": getPass(), "x-device": deviceId() };
   if (getAdminKey()) headers["x-admin"] = getAdminKey();
   if (body) headers["content-type"] = "application/json";
   try {
