@@ -32,7 +32,7 @@ $("printBtn").addEventListener("click", async () => { const e = await saveCard()
 
 /* ---------- Boot ---------- */
 { const qp = new URLSearchParams(location.search);
-  if (qp.has("fresh")) { try { localStorage.removeItem(key("seen")); } catch {} qp.delete("fresh"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
+  if (qp.has("fresh")) { try { localStorage.removeItem(key("seen")); localStorage.removeItem(key("swiped")); } catch {} qp.delete("fresh"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
 { const qp = new URLSearchParams(location.search), code = qp.get("code");
   if (code) { ls.set(key("pass"), code.trim()); qp.delete("code"); history.replaceState(null, "", location.pathname + (qp.toString() ? "?" + qp : "") + location.hash); } }
 buildTypePicker(); bindForm(); fillForm(); saveEvent(); render();

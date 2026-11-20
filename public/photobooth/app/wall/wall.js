@@ -307,57 +307,154 @@ export function markSeen(ids) {
   const s = loadSeen(); ids.forEach(i => s.add(i));
   try { localStorage.setItem(SEEN_KEY, JSON.stringify([...s].slice(-3000))); } catch {}
 }
+/* First time on a phone you open the packs yourself: swipe across the top to cut. After that
+   (and always on the TV) they open on their own. More than one pack? They sit in a stack. */
+export const SWIPED_KEY = key("swiped");
+function swipeToCut(stage, p, isSkipped) {
+  const cut = p.querySelector(".mp-cut"), top = p.querySelector(".mp-top");
+  const hint = document.createElement("div"); hint.className = "swipe-hint"; hint.setAttribute("aria-hidden", "true");
+  hint.innerHTML = `<span class="sh-line"></span><span class="sh-hand">👆</span>`; p.append(hint);
+  stage.classList.add("cutting"); p.classList.add("cuttable");
+  return new Promise((res) => {
+    let x0 = null, dir = 1, prog = 0, done = false;
+    const show = (v) => {
+      cut.style.transformOrigin = dir > 0 ? "left center" : "right center"; cut.style.transform = `scaleX(${v})`; cut.style.opacity = v ? "1" : "0";
+      top.style.transformOrigin = dir > 0 ? "100% 100%" : "0 100%"; top.style.transform = `rotate(${dir * v * 5}deg) translateY(${-v * 3}px)`;
+    };
+    const finish = (how) => {
+      if (done) return; done = true; clearInterval(chk);
+      ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((t, i) => stage.removeEventListener(t, [down, move, up, up][i]));
+      hint.remove(); stage.classList.remove("cutting"); p.classList.remove("cuttable");
+      top.style.transition = ""; top.style.transform = ""; top.style.transformOrigin = "";
+      cut.style.transition = "opacity .45s"; cut.style.opacity = "0";
+      res(how);
+    };
+    const down = (e) => { if (e.target.closest("button")) return; e.stopPropagation(); x0 = e.clientX; prog = 0; top.style.transition = cut.style.transition = "none"; try { stage.setPointerCapture(e.pointerId); } catch {} hint.classList.add("hide"); };
+    const move = (e) => {
+      if (x0 === null || done) return;
+      const dx = e.clientX - x0; if (!prog && Math.abs(dx) > 6) dir = Math.sign(dx);
+      prog = Math.max(0, Math.min(1, (dx * dir) / (p.getBoundingClientRect().width * 0.7)));
+      show(prog); if (prog >= 1) finish("swiped");
+    };
+    const up = () => {
+      if (x0 === null || done) return; x0 = null;
+      if (prog > 0.75) { show(1); return finish("swiped"); }
+      top.style.transition = cut.style.transition = "transform .35s cubic-bezier(.2,1.4,.4,1), opacity .3s"; show(0); hint.classList.remove("hide");
+    };
+    stage.addEventListener("pointerdown", down); stage.addEventListener("pointermove", move);
+    stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+    const chk = setInterval(() => { if (isSkipped()) finish("auto"); }, 150);
+  });
+}
+async function autoCut(p, dur) {
+  const cut = p.querySelector(".mp-cut");
+  cut.style.transition = "none"; cut.style.transformOrigin = "left center"; cut.style.transform = "scaleX(0)"; cut.style.opacity = "1";
+  void cut.offsetWidth; cut.style.transition = `transform ${dur}ms cubic-bezier(.45,.05,.55,.95)`; cut.style.transform = "scaleX(1)";
+  await sleep(dur);
+  cut.style.transition = "opacity .45s"; cut.style.opacity = "0";
+}
 export async function megaOpen(ids) {
   packPlaying = true; updatePackCount(); holdUntil = Date.now() + 600000;
   const stage = $("packStage"), cap = $("packCaption"), box = $("megaPacks"), cardsBox = $("packCards");
   const groups = []; for (let i = 0; i < ids.length; i += MEGA_PACK) groups.push(ids.slice(i, i + MEGA_PACK));
   const n = groups.length;
-  const per = Math.max(700, Math.min(2400, 16000 / n));          // 1-6 packs: ~2.4s each; many packs: shorter, never rushed
-  const fly = Math.min(3200, per * 1.4 + 900);
+  let manual = new URLSearchParams(location.search).has("swipe") || (!isTV() && !DEMO && !ls.get(SWIPED_KEY));
+  const firstTime = manual;
+  const per = Math.max(900, Math.min(2000, 14000 / n));          // automatic: ~2s a pack, quicker when there are many
   $("featWrap").style.visibility = "hidden"; document.querySelector(".feat-cap").style.visibility = "hidden";
-  $("pack").style.display = "none"; cardsBox.innerHTML = ""; box.innerHTML = "";
-  // size the packs so they all fit on screen
-  const cols = Math.min(n, Math.ceil(Math.sqrt(n * (innerWidth / innerHeight) * 0.9))), rows = Math.ceil(n / cols);
-  const mh = Math.min(innerHeight * 0.42, (innerHeight * 0.6) / rows, ((innerWidth * 0.9) / cols - 12) / 0.5525);
-  box.style.setProperty("--mh", `${Math.floor(mh)}px`);
+  $("pack").style.display = "none"; cardsBox.innerHTML = ""; box.innerHTML = ""; box.className = "mega stack"; stage.classList.add("stacking");
+  box.style.removeProperty("--mh");                               // sized in CSS: half the screen height, or narrower phones
   const arts = await Promise.all(groups.map(g => getPackArt(packKeyFor(g))));
   const packs = groups.map((g, i) => {
-    const p = document.createElement("div"); p.className = "mpack"; p.style.animationDelay = `${i * Math.min(140, 1200 / n)}ms`;
-    p.innerHTML = `<img alt=""><div class="mp-top"></div>`;
+    const p = document.createElement("div"); p.className = "mpack"; p.style.animationDelay = `${Math.min(i, 6) * 110}ms`;
+    p.innerHTML = `<img alt=""><div class="mp-top"></div><div class="mp-cut"></div>`;
     if (arts[i]) { p.querySelector("img").src = arts[i]; p.querySelector(".mp-top").style.backgroundImage = `url("${arts[i]}")`; }
-    box.append(p); return p;
+    box.prepend(p); return p;                                     // the first pack ends up on top
   });
-  cap.textContent = `📦 ${ids.length} card${ids.length === 1 ? "" : "s"} waiting · ${n} pack${n === 1 ? "" : "s"}`;
+  // the stack: the pack to open next in front, the rest fanned a little behind it
+  const place = (cur) => packs.forEach((p, i) => {
+    const d = i - cur; if (d < 0) return;
+    p.style.zIndex = String(100 - d); p.style.opacity = d > 5 ? "0" : "1";
+    p.style.transform = d ? `translate(${d * 9}px, ${d * 7}px) rotate(${(d % 2 ? 1 : -1) * Math.min(d, 5) * 2.2}deg) scale(${1 - Math.min(d, 5) * 0.04})` : "none";
+  });
+  place(0);
+  const label = () => n > 1 ? `📦 ${n} packs · ${ids.length} cards` : `📦 ${ids.length} card${ids.length === 1 ? "" : "s"}`;
+  cap.textContent = label();
+  let skip = null;
+  if (manual && n > 1) {
+    skip = document.createElement("button"); skip.type = "button"; skip.className = "pack-skip"; skip.textContent = "Open all for me ⏩";
+    skip.addEventListener("click", (e) => { e.stopPropagation(); manual = false; skip.remove(); });
+    stage.append(skip);
+  }
   prepareRivers(ids);
   stage.hidden = false;
-  await sleep(1800 + Math.min(1000, n * 60));
-  cap.textContent = "Opening…"; stage.classList.add("landing");
+  await sleep(1300 + Math.min(700, n * 110));
   const sr = stage.getBoundingClientRect(), flights = [];
-  const fan = Math.round(fly * 0.62), hop = Math.max(700, Math.min(1300, per * 0.75));
   for (let i = 0; i < n; i++) {
-    const p = packs[i], r = p.getBoundingClientRect();
-    p.classList.add("rip");
-    const cx = r.left - sr.left + r.width / 2, cy = r.top - sr.top + r.height * 0.3;
-    const cw = Math.max(46, Math.min(r.width * 0.8, innerWidth * 0.16));
-    groups[i].forEach((id, k) => {
+    const p = packs[i];
+    box.classList.remove("revealing"); place(i);
+    if (i) await sleep(manual ? 450 : 300);
+    if (manual) {
+      cap.textContent = i === 0 ? `✂️ Swipe across the top to open${n > 1 ? ` · ${n} packs` : ""}` : `✂️ Pack ${i + 1} of ${n} · swipe to open`;
+      await swipeToCut(stage, p, () => !manual);
+    }
+    if (!manual) {
+      cap.textContent = n > 1 ? `Opening pack ${i + 1} of ${n}…` : "Opening…";
+      await autoCut(p, Math.min(900, per * 0.45));
+    }
+    stage.classList.add("landing");
+    const r = p.getBoundingClientRect();
+    p.classList.add("rip"); cap.textContent = "";
+    // the cards rise out as one neat stack, pause, then slowly slide apart into a row
+    const g = groups[i], N = g.length, sp = manual ? 1 : Math.max(0.55, Math.min(1, per / 2000));
+    const cx = r.left - sr.left + r.width / 2, cy = r.top - sr.top + r.height * 0.42;
+    // where they spread to: the neatest grid that fits the screen (one row on a wide TV)
+    const availW = Math.min(innerWidth * 0.94, 1400), availH = sr.height * 0.6, GAP = 8;
+    let cols = 1, cw = 0;
+    for (let c = 1; c <= N; c++) {
+      const rows = Math.ceil(N / c), w = Math.min((availW - GAP * (c - 1)) / c, (availH - GAP * (rows - 1)) / rows / 1.4);
+      if (w > cw + 0.5) { cw = w; cols = c; }
+    }
+    cw = Math.max(40, Math.min(cw, innerWidth * 0.42));
+    const rows = Math.ceil(N / cols), ch = cw * 1.4, midY = sr.height * 0.5;
+    const pile = Math.max(1, Math.min(2.4, (r.width * 0.62) / cw));          // the pile is shown big, then shrinks as it spreads
+    const rise = 750 * sp, hold = 500 * sp, spread = 1100 * sp, stay = 600 * sp;
+    const out = r.height * 0.3, fan = rise + hold + spread;
+    const hop = manual ? 1100 : Math.max(700, Math.min(1200, per * 0.6));
+    g.forEach((id, k) => {
       const m = document.createElement("img"); m.className = "mcard"; m.alt = ""; m.src = cardSrc(id);
-      const spread = (k - (groups[i].length - 1) / 2);
-      const dx = spread * cw * 0.32, dy = -r.height * 0.45 - Math.abs(spread) * 4, rot = spread * 7, lag = k * Math.min(110, per / 14);
-      m.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;--dx:${dx}px;--dy:${dy}px;--r:${rot}deg;--d:${fan}ms;animation-delay:${lag}ms`;
+      const back = N - 1 - k;                                       // the first card sits on top
+      m.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;animation:none;opacity:1;z-index:${20 + back}`;
       cardsBox.append(m);
-      flights.push(sleep(fan + lag + k * 40).then(() => {
+      const row = Math.floor(k / cols), inRow = row === rows - 1 ? N - row * cols : cols, col = k - row * cols;
+      const dx = (col - (inRow - 1) / 2) * (cw + GAP), dy = midY - cy + (row - (rows - 1) / 2) * (ch + GAP);
+      const sx = back * 1.4, sy = -back * 1.8;                      // a tidy pile with a little depth
+      const T = (x, y, sc = 1) => `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${sc})`;
+      try {
+        m.animate([
+          { transform: T(sx, sy + out * 0.3, pile * 0.85), opacity: 0, offset: 0 },
+          { transform: T(sx, sy - out, pile), opacity: 1, offset: rise / fan },
+          { transform: T(sx, sy - out * 0.6, pile), opacity: 1, offset: (rise + hold) / fan },
+          { transform: T(dx, dy, 1), opacity: 1, offset: 1 },
+        ], { duration: fan, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" });
+      } catch { m.style.transform = T(dx, dy); }
+      flights.push(sleep(fan + stay + k * Math.min(90, 900 / N)).then(() => {
         m.remove();
-        return landInRiver(id, { x: sr.left + cx + dx, y: sr.top + cy + dy - 10, w: cw }, { dur: hop, rot });
+        return landInRiver(id, { x: sr.left + cx + dx, y: sr.top + cy + dy, w: cw }, { dur: hop });
       }));
     });
-    setTimeout(() => p.classList.add("done"), Math.min(per * 0.85, 1600));
-    await sleep(per);
+    // the empty wrapper is tossed aside so the next pack can come forward
+    setTimeout(() => box.classList.add("revealing"), Math.round(rise * 0.5));   // the waiting packs step back
+    setTimeout(() => p.classList.add("away"), Math.round(rise + hold * 0.5));
+    await sleep(Math.round(fan + stay + N * Math.min(90, 900 / N) * 0.6));
   }
+  skip?.remove();
+  if (firstTime) ls.set(SWIPED_KEY, "1");                       // from now on they open on their own
   await Promise.all(flights);
   markSeen(ids); releaseRivers();
   cap.textContent = `✨ ${ids.length} card${ids.length === 1 ? "" : "s"} revealed!`;
   await sleep(2500);
-  stage.hidden = true; stage.classList.remove("landing"); box.innerHTML = ""; cardsBox.innerHTML = ""; cap.textContent = "";
+  stage.hidden = true; stage.classList.remove("landing", "cutting", "stacking"); box.innerHTML = ""; box.className = "mega"; cardsBox.innerHTML = ""; cap.textContent = "";
   $("pack").style.display = ""; $("featWrap").style.visibility = ""; document.querySelector(".feat-cap").style.visibility = "";
   packPlaying = false; holdUntil = 0;
   await pullToCentre(ids[0], false);
